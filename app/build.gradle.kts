@@ -20,13 +20,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val mapsKeyFile = rootProject.file("mapskey.properties")
+        val mapsKeyFile = rootProject.file("secret.properties")
         val properties = Properties()
         if (mapsKeyFile.exists()) {
             properties.load(mapsKeyFile.inputStream())
         }
 
-        // Dodanie klucza do manifestu
         val apiKey = properties.getProperty("MAPS_API_KEY") ?: ""
         manifestPlaceholders["GOOGLE_KEY"] = apiKey
     }
@@ -49,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
 }
@@ -72,6 +72,8 @@ dependencies {
 
     // Opcjonalnie: biblioteka dla ScaleBar i innych widgetów
     implementation("com.google.maps.android:maps-compose-widgets:6.1.2")
+
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
