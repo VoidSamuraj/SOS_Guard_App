@@ -67,13 +67,16 @@ dependencies {
     // Google Maps Compose
     implementation("com.google.maps.android:maps-compose:6.1.2")
 
-    // Opcjonalnie: biblioteka dla Clustering, Street View, itp.
+    // Clustering, Street View, etc.
     implementation("com.google.maps.android:maps-compose-utils:6.1.2")
 
-    // Opcjonalnie: biblioteka dla ScaleBar i innych widgetów
+    // ScaleBar adn widgets
     implementation("com.google.maps.android:maps-compose-widgets:6.1.2")
 
     implementation("com.google.android.gms:play-services-maps:19.0.0")
+
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -1,4 +1,4 @@
-package com.pollub.awpfog
+package com.pollub.awpfog.map
 
 object MapStyle {
     val json = """

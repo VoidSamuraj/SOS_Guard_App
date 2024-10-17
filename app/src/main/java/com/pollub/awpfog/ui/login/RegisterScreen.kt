@@ -1,4 +1,4 @@
-package com.pollub.awpfog
+package com.pollub.awpfoc.ui.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +22,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.pollub.awpfog.ui.theme.AwpfogTheme
 
+/**
+ * Composable function for the registration screen where users can enter their email and password to create an account.
+ *
+ * The screen includes fields for email, password, and password confirmation, along with buttons for signing up
+ * and navigating back to the login screen.
+ *
+ * @param modifier Optional [Modifier] to be applied to the root element.
+ * @param navToLogin Lambda function to be executed when navigating back to the login screen.
+ * @param onSignUp Lambda function to be executed when the sign-up button is pressed.
+ */
 @Composable
-fun RegistrationScreen(modifier: Modifier = Modifier) {
+fun RegistrationScreen(
+    modifier: Modifier = Modifier,
+    navToLogin: ()->Unit={},
+    onSignUp: ()->Unit={}
+) {
+
     val emailState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
     val confirmPasswordState = remember { mutableStateOf("") }
@@ -40,14 +56,16 @@ fun RegistrationScreen(modifier: Modifier = Modifier) {
         Text(
             text = "Rejestracja",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 16.dp),
+            color = MaterialTheme.colorScheme.onPrimary
         )
 
         Text(
             text = "Aby założyć konto wprowadź swój adres e-mail i hasło",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp),
+            color = MaterialTheme.colorScheme.onPrimary
         )
 
         OutlinedTextField(
@@ -74,27 +92,28 @@ fun RegistrationScreen(modifier: Modifier = Modifier) {
         )
 
         Button(
-            onClick = { /* TODO: Logika rejestracji */ },
+            onClick = onSignUp,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A5061))
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
-            Text(text = "Załóż konto", color = Color.White)
+            Text(text = "Załóż konto", color = MaterialTheme.colorScheme.onSecondary)
         }
 
         Text(
             text = "Posiadasz konto? Zaloguj się",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onPrimary
         )
 
         TextButton(
-            onClick = { /* TODO: Logika przejścia do logowania */ },
+            onClick = navToLogin,
             modifier = Modifier.padding(bottom = 100.dp)
         ) {
-            Text(text = "Zaloguj się", color = Color(0xFF4A5061))
+            Text(text = "Zaloguj się", color = MaterialTheme.colorScheme.onTertiaryContainer)
         }
     }
 }
@@ -102,5 +121,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewRegistrationScreen() {
-    RegistrationScreen()
+    AwpfogTheme(dynamicColor = false) {
+        RegistrationScreen()
+    }
 }
