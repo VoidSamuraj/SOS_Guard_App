@@ -1,54 +1,72 @@
-package com.pollub.awpfoc.ui.login
+package com.pollub.awpfog.ui.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.isLoginValid
+import com.pollub.awpfog.utils.isPasswordValid
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pollub.awpfog.R
+import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
 
 /**
- * Composable function for the registration screen where users can enter their email and password to create an account.
+ * Registration screen that allows the user to enter their username and password.
  *
- * The screen includes fields for email, password, and password confirmation, along with buttons for signing up
- * and navigating back to the login screen.
- *
- * @param modifier Optional [Modifier] to be applied to the root element.
- * @param navToLogin Lambda function to be executed when navigating back to the login screen.
- * @param onSignUp Lambda function to be executed when the sign-up button is pressed.
+ * @param modifier Modifier for this composable, allowing customization of style and layout.
+ * @param navToLogin Function called when navigating to the login screen.
+ * @param navToNextScreen Function called when navigating to the next registration screen,
+ * with username and password as parameters.
  */
 @Composable
 fun RegistrationScreen(
     modifier: Modifier = Modifier,
-    navToLogin: ()->Unit={},
-    onSignUp: ()->Unit={}
+    registerScreenViewModel: RegisterScreenViewModel,
+    navToLogin: () -> Unit = {},
+    navToNextScreen: () -> Unit = {},
 ) {
+    var loginState by remember { mutableStateOf(registerScreenViewModel.login) }
+    var passwordState by remember { mutableStateOf(registerScreenViewModel.password) }
+    var confirmPasswordState by remember { mutableStateOf(registerScreenViewModel.password) }
 
-    val emailState = remember { mutableStateOf("") }
-    val passwordState = remember { mutableStateOf("") }
-    val confirmPasswordState = remember { mutableStateOf("") }
+    var isLoginValid by remember { mutableStateOf(true) }
+    var isPasswordValid by remember { mutableStateOf(true) }
+    var arePasswordsSame by remember { mutableStateOf(true) }
+
+    val passwordVisible = remember { mutableStateOf(false) }
+    val repeatPasswordVisible = remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFEFEFF4))
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -61,7 +79,7 @@ fun RegistrationScreen(
         )
 
         Text(
-            text = "Aby założyć konto wprowadź swój adres e-mail i hasło",
+            text = "Aby założyć konto wprowadź login i hasło",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 32.dp),
@@ -69,30 +87,118 @@ fun RegistrationScreen(
         )
 
         OutlinedTextField(
-            value = emailState.value,
-            onValueChange = { emailState.value = it },
-            label = { Text("Email*") },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            value = loginState,
+            onValueChange = {
+                if (it.length <= 20) {
+                    loginState = it
+                    isLoginValid = isLoginValid(it)
+                }
+            },
+            label = { Text("Login*") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = if (isLoginValid) 16.dp else 4.dp),
+            isError = !isLoginValid,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            maxLines = 1
         )
-
+        if (!isLoginValid) {
+            Text(
+                text = "Login jest wymagany i powinien zawierać od 3 do 20 znaków",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
         OutlinedTextField(
-            value = passwordState.value,
-            onValueChange = { passwordState.value = it },
+            value = passwordState,
+            onValueChange = {
+                passwordState = it
+                isPasswordValid = isPasswordValid(it)
+                arePasswordsSame = it == confirmPasswordState
+            },
             label = { Text("Wprowadź hasło*") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = if (isPasswordValid) 16.dp else 4.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
+            isError = !isPasswordValid,
+            trailingIcon = {
+                val image =
+                    if (passwordVisible.value) R.drawable.outline_visibility_24 else R.drawable.outline_visibility_off_24
+                Icon(
+                    painter = painterResource(image),
+                    contentDescription = if (passwordVisible.value) "Ukryj hasło" else "Pokaż hasło",
+                    modifier = Modifier.clickable { passwordVisible.value = !passwordVisible.value }
+                )
+            },
+            maxLines = 1
         )
-
+        if (!isPasswordValid) {
+            Text(
+                text = "Hasło powinno mieć minimum 8 znaków, zawierać małą i dużą literę, cyfrę i znak specjalny.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
         OutlinedTextField(
-            value = confirmPasswordState.value,
-            onValueChange = { confirmPasswordState.value = it },
+            value = confirmPasswordState,
+            onValueChange = {
+                confirmPasswordState = it
+                arePasswordsSame = it == passwordState
+            },
             label = { Text("Powtórz hasło*") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
+            visualTransformation = if (repeatPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = if (arePasswordsSame) 32.dp else 4.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            isError = !arePasswordsSame,
+            trailingIcon = {
+                val image =
+                    if (repeatPasswordVisible.value) R.drawable.outline_visibility_24 else R.drawable.outline_visibility_off_24
+                Icon(
+                    painter = painterResource(image),
+                    contentDescription = if (repeatPasswordVisible.value) "Ukryj hasło" else "Pokaż hasło",
+                    modifier = Modifier.clickable {
+                        repeatPasswordVisible.value = !repeatPasswordVisible.value
+                    }
+                )
+            },
+            maxLines = 1
         )
-
+        if (!arePasswordsSame) {
+            Text(
+                text = "Hasła powinny być takie same.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+        }
         Button(
-            onClick = onSignUp,
+            onClick = {
+
+                isLoginValid = isLoginValid(loginState)
+                isPasswordValid = isPasswordValid(passwordState)
+                arePasswordsSame = passwordState == confirmPasswordState
+
+                if (isLoginValid && isPasswordValid && arePasswordsSame) {
+                    registerScreenViewModel.login = loginState
+                    registerScreenViewModel.password = passwordState
+                    navToNextScreen()
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
@@ -100,7 +206,6 @@ fun RegistrationScreen(
         ) {
             Text(text = "Załóż konto", color = MaterialTheme.colorScheme.onSecondary)
         }
-
         Text(
             text = "Posiadasz konto? Zaloguj się",
             style = MaterialTheme.typography.bodyMedium,
@@ -109,8 +214,11 @@ fun RegistrationScreen(
             color = MaterialTheme.colorScheme.onPrimary
         )
 
-        TextButton(
-            onClick = navToLogin,
+        OutlinedButton(
+            onClick = {
+                registerScreenViewModel.clearAllFields()
+                navToLogin()
+            },
             modifier = Modifier.padding(bottom = 100.dp)
         ) {
             Text(text = "Zaloguj się", color = MaterialTheme.colorScheme.onTertiaryContainer)
@@ -122,6 +230,6 @@ fun RegistrationScreen(
 @Composable
 fun PreviewRegistrationScreen() {
     AwpfogTheme(dynamicColor = false) {
-        RegistrationScreen()
+        RegistrationScreen(registerScreenViewModel = viewModel())
     }
 }

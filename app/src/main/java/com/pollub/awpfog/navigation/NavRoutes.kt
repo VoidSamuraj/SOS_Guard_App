@@ -7,7 +7,9 @@ enum class Screen {
     LOGIN_SCREEN,
     REGISTER_SCREEN,
     STATUS_SCREEN,
-    INTERVENTION_SCREEN
+    INTERVENTION_SCREEN,
+    REMIND_PASSWORD_SCREEN,
+    EDIT_GUARD_DATA_SCREEN
 }
 
 /**
@@ -20,4 +22,6 @@ sealed class NavRoutes(val route: String) {
     object InterventionScreen : NavRoutes(Screen.INTERVENTION_SCREEN.name)
     object LoginScreen : NavRoutes(Screen.LOGIN_SCREEN.name)
     object RegisterScreen : NavRoutes(Screen.REGISTER_SCREEN.name)
+    object RemindPasswordScreen : NavRoutes(Screen.REMIND_PASSWORD_SCREEN.name)
+    object EditGuardDataScreen : NavRoutes(Screen.EDIT_GUARD_DATA_SCREEN.name)
 }

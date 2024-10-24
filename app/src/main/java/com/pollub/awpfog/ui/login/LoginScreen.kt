@@ -1,6 +1,7 @@
-package com.pollub.awpfoc.ui.login
+package com.pollub.awpfog.ui.login
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -18,10 +21,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.pollub.awpfog.R
 import com.pollub.awpfog.ui.theme.AwpfogTheme
 
 
@@ -39,13 +47,14 @@ import com.pollub.awpfog.ui.theme.AwpfogTheme
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onLoginPress: ()->Unit={},
-    navToRegister: ()->Unit={},
-    onRemindPasswordPress: ()->Unit={}
+    onLoginPress: (login: String, password: String) -> Unit = { _, _ -> },
+    navToRegister: () -> Unit = {},
+    onRemindPasswordPress: () -> Unit = {}
 ) {
 
-    val emailState = remember { mutableStateOf("") }
+    val loginState = remember { mutableStateOf("") }
     val passwordState = remember { mutableStateOf("") }
+    val passwordVisible = remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -63,7 +72,7 @@ fun LoginScreen(
         )
 
         Text(
-            text = "Aby się zalogować wprowadź swój adres e-mail i hasło",
+            text = "Aby się zalogować wprowadź swój login i hasło",
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 32.dp),
@@ -71,22 +80,49 @@ fun LoginScreen(
         )
 
         OutlinedTextField(
-            value = emailState.value,
-            onValueChange = { emailState.value = it },
-            label = { Text("Email*") },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            value = loginState.value,
+            onValueChange = {
+                if (it.length <= 20) {
+                    loginState.value = it
+                }
+            },
+            label = { Text("Login*") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            maxLines = 1
         )
 
         OutlinedTextField(
             value = passwordState.value,
             onValueChange = { passwordState.value = it },
             label = { Text("Hasło*") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
+            visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            trailingIcon = {
+                val image =
+                    if (passwordVisible.value) R.drawable.outline_visibility_24 else R.drawable.outline_visibility_off_24
+                Icon(
+                    painter = painterResource(image),
+                    contentDescription = if (passwordVisible.value) "Ukryj hasło" else "Pokaż hasło",
+                    modifier = Modifier.clickable { passwordVisible.value = !passwordVisible.value }
+                )
+            },
+            maxLines = 1
         )
 
         Button(
-            onClick = onLoginPress ,
+            onClick = { onLoginPress(loginState.value, passwordState.value) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
@@ -116,7 +152,9 @@ fun LoginScreen(
 
         Button(
             onClick = navToRegister,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 100.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 100.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Załóż nowe konto", color = MaterialTheme.colorScheme.onSecondary)

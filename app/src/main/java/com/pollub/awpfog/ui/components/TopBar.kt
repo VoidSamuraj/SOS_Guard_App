@@ -1,6 +1,7 @@
 package com.pollub.awpfog.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,16 +27,22 @@ import com.pollub.awpfog.R
 import com.pollub.awpfog.ui.theme.AwpfogTheme
 
 /**
- * Composable function that displays a top bar with user information and a logout button.
+ * Composable function that displays a top app bar with user information,
+ * an edit button, and a logout button.
  *
- * The top bar contains an icon representing the user, a text displaying the guard's ID,
+ * The top app bar includes an selected icon, which performs custom action
+ * when clicked, a text displaying the user's ID,
  * and a button to log out of the application.
  *
- * @param onLogout Lambda function to be executed when the logout button is clicked.
+ * @param clientName Name representing logged user.
+ * @param iconId Id representing icon placed in left corner.
+ * @param onIconClick Lambda function to be executed when the user icon is clicked.
+ * @param onLogout Lambda function to be executed when the logout button is clicked,
+ *                  logging the user out of the application.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(clientId:String, onLogout: () -> Unit) {
+fun TopBar(clientName: String, iconId: Int, onIconClick: () -> Unit, onLogout: () -> Unit) {
     TopAppBar(
         colors = topAppBarColors(
             containerColor = MaterialTheme.colorScheme.secondary,
@@ -46,15 +54,21 @@ fun TopBar(clientId:String, onLogout: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.baseline_account_circle_24),
+                    painter = painterResource(id = iconId),
                     contentDescription = "Call",
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clickable {
+                            onIconClick()
+                        }
                 )
                 Text(
                     modifier = Modifier.padding(start = 8.dp),
-                    text = "ID: $clientId",
+                    text = clientName,
                     color = Color.White,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
@@ -72,11 +86,10 @@ fun TopBar(clientId:String, onLogout: () -> Unit) {
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 fun TopAppBarPreview() {
     AwpfogTheme(dynamicColor = false) {
-        TopBar("2137",{})
+        TopBar("Januszesxxxxx noWakowassdisad", R.drawable.baseline_account_circle_24, {}, {})
     }
 }
