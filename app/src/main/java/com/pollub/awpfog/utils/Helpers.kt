@@ -1,5 +1,8 @@
 package com.pollub.awpfog.utils
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import java.util.regex.Pattern
 
 
@@ -62,4 +65,42 @@ fun isEmailValid(email: String): Boolean {
     val emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
     val pattern = Pattern.compile(emailRegex)
     return pattern.matcher(email).matches()
+}
+/**
+ * Retrieves the street name based on latitude and longitude coordinates.
+ *
+ * @param latitude The latitude of the desired location.
+ * @param longitude The longitude of the desired location.
+ * @param apiKey The key of google api.
+ * @return The street name if found, or null if not found or an error occurs.
+ *
+ * @throws java.io.IOException If the geocoding service is not available or fails to process the request.
+ *
+ * Note: The `getFromLocation` method is deprecated. Consider using
+ * alternative geocoding methods or services for future implementations.
+ */
+
+suspend fun getStreetName(latitude: Double, longitude: Double, apiKey: String): String? {
+    val client = OkHttpClient()
+    val url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$apiKey"
+    val request = Request.Builder().url(url).build()
+
+    return try {
+        val response = client.newCall(request).execute()
+        if (response.isSuccessful) {
+            val jsonResponse = JSONObject(response.body.string())
+            val results = jsonResponse.getJSONArray("results")
+            if (results.length() > 0) {
+                val address = results.getJSONObject(0).getString("formatted_address")
+                address
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
 }

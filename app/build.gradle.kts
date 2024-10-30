@@ -28,6 +28,7 @@ android {
 
         val apiKey = properties.getProperty("MAPS_API_KEY") ?: ""
         manifestPlaceholders["GOOGLE_KEY"] = apiKey
+        buildConfigField("String", "MAPS_API_KEY", "\"${apiKey}\"")
     }
 
     buildTypes {
@@ -79,6 +80,7 @@ dependencies {
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 

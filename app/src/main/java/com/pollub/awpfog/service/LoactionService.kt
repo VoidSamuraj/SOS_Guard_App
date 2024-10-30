@@ -11,7 +11,6 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.pollub.awpfog.data.WebSocketManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,10 +21,19 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.pollub.awpfog.BASE_WEBSOCKET_URL
 import kotlinx.coroutines.*
 import com.pollub.awpfog.R
+import com.pollub.awpfog.data.SharedPreferencesManager
+import com.pollub.awpfog.network.NetworkClient.WebSocketManager
+import kotlin.random.Random
 
 class LocationService : Service() {
+    companion object {
+        const val NOTIFICATION_ID = 1
+    }
+
+    private val guard =SharedPreferencesManager.getGuard()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     //associate coroutine with scope to easy cancel coroutine
@@ -36,9 +44,9 @@ class LocationService : Service() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        startForeground(1, createNotification())
+        startForeground(NOTIFICATION_ID, createNotification())
 
-        WebSocketManager.connect("ws://your-websocket-url") // Podaj właściwy URL WebSocket
+        WebSocketManager.connect(BASE_WEBSOCKET_URL)
         sendStartupInfo()
     }
 
@@ -58,18 +66,33 @@ class LocationService : Service() {
         return null
     }
 
+    @SuppressLint("MissingPermission")
     private fun sendStartupInfo() {
-        val startupData = "Startup Info: Your custom message or data"
-        scope.launch {
-            try {
-                WebSocketManager.sendMessage(startupData)
-                Log.d("LocationService", "Startup info sent: $startupData")
-            } catch (e: Exception) {
-                Log.e("LocationService", "Error sending startup info: ${e.message}")
-            }
-        }
-    }
+        fusedLocationClient.requestLocationUpdates(
+            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 0).build(),
+            object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    val location = locationResult.lastLocation
+                    if (location != null) {
+                        val locationData =  """
+                            {"initMessage":true, "guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
+                            """.trimIndent()
 
+                        scope.launch {
+                            try {
+                                WebSocketManager.sendMessage(locationData, location.latitude ,location.longitude)
+                                Log.d("LocationService", "Initial location sent")
+                            } catch (e: Exception) {
+                                Log.e("LocationService", "Error sending initial location: ${e.message}")
+                            }
+                        }
+                        fusedLocationClient.removeLocationUpdates(this) // Wyłącz po pierwszym odczycie
+                    }
+                }
+            },
+            Looper.getMainLooper()
+        )
+    }
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
@@ -93,11 +116,20 @@ class LocationService : Service() {
     }
 
     private fun sendLocationToServer(location: Location) {
-        val locationData = "${location.latitude},${location.longitude}"
-
+        //test
+        val lat = Random.nextDouble(49.0,54.8)
+        val lng = Random.nextDouble(14.1,24.2)
+        /*
+        val locationData =  """
+                            {"guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
+                            """.trimIndent()
+        */
+        val locationData =  """
+                            {"guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${lat}, "longitude": ${lng}}
+                            """.trimIndent()
         scope.launch {
             try {
-                WebSocketManager.sendMessage(locationData)
+                WebSocketManager.sendMessage(locationData, lat, lng)
             } catch (e: Exception) {
                 Log.e("LocationService", "Error sending location: ${e.message}")
             }

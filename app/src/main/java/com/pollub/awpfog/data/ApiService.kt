@@ -108,4 +108,20 @@ interface ApiService {
         @Field("email") email: String?,
         @Field("phone") phone: String?
     ): Call<Pair<String, GuardInfo>>
+
+    /**
+     * Retrieves the location assigned to an active intervention for a guard as a JSON string.
+     *
+     * This function sends an HTTP POST request to the endpoint `/action/getActiveInterventionLocationAssignedToGuard`,
+     * passing the guard’s ID (`guardId`). If the guard has an intervention with the status
+     * `IN_PROGRESS`, it returns the associated location as a JSON string, e.g., `{"lat":51.1079,"lng":17.0385}`.
+     * Otherwise, it returns `null`.
+     *
+     * @param guardId The identifier of the guard whose active intervention location is being requested.
+     * @return A `Call<String>` object that contains the location as a JSON string if the guard has an active intervention,
+     *         or `null` if there is no active or assigned intervention.
+     */
+    @FormUrlEncoded
+    @POST("action/getActiveInterventionLocationAssignedToGuard")
+    fun getActiveInterventionLocationAssignedToGuard(@Field("guardId") guardId: Int): Call<String>
 }

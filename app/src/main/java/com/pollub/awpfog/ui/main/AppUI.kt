@@ -1,14 +1,20 @@
 package com.pollub.awpfog.ui.main
 
+import android.content.Intent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,14 +33,18 @@ import androidx.navigation.compose.rememberNavController
 import com.pollub.awpfog.ui.theme.AwpfogTheme
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.pollub.awpfog.MainActivity
 import com.pollub.awpfog.ui.login.LoginScreen
 import com.pollub.awpfog.utils.CustomSnackBar
 import com.pollub.awpfog.navigation.NavRoutes
 import com.pollub.awpfog.ui.components.TopBar
 import com.pollub.awpfog.R
 import com.pollub.awpfog.data.SharedPreferencesManager
+import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.data.models.GuardInfo
 import com.pollub.awpfog.navigation.RegisterNavRoutes
+import com.pollub.awpfog.network.NetworkClient.WebSocketManager
+import com.pollub.awpfog.service.LocationService
 import com.pollub.awpfog.ui.components.EditGuardDataScreen
 import com.pollub.awpfog.ui.login.RegistrationScreen
 import com.pollub.awpfog.ui.login.RegistrationScreenPersonalInformation
@@ -54,6 +64,7 @@ import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
  *
  * The navigation routes are defined using the [NavRoutes] enum.
  *
+ * @param mainActivity The MainActivity to use functionality requiring app context.
  * @param viewModel The AppViewModel to interact with data layer.
  *
  * Functionality:
@@ -65,13 +76,16 @@ import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
  */
 @Composable
 fun AppUI(
-    viewModel: AppViewModel
+    mainActivity: MainActivity,
+    viewModel: AppViewModel,
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
     val density = LocalDensity.current.density
     val screenWidthPx = screenWidth.value * density
+
+    val locationServiceIntent = Intent(mainActivity, LocationService::class.java)
 
     var isNavigatingToLogin by remember { mutableStateOf(false) }
     var isNavigatingToHome by remember { mutableStateOf(false) }
@@ -101,7 +115,11 @@ fun AppUI(
                                 },
                                 onLogout = {
                                     viewModel.logout(onSuccess = {
-                                        navController.navigate(NavRoutes.LoginScreen.route)
+                                        navController.navigate(NavRoutes.LoginScreen.route){
+                                            popUpTo(0) { inclusive = true }
+                                            launchSingleTop = true
+                                            restoreState = false
+                                        }
                                     },
                                         onFailure = { message ->
                                             snackBarMessage.value = message
@@ -110,13 +128,48 @@ fun AppUI(
                                 })
                         }
                     ) { innerPadding ->
+                        viewModel.setIsSystemConnected(mainActivity)
+                        viewModel.getActiveInterventionLocationAssignedToGuard (guardId = SharedPreferencesManager.getGuard().id, onSuccess = { location->
+                            viewModel.reportLocation.value=location
+                            SharedPreferencesManager.saveStatus(Guard.GuardStatus.INTERVENTION)
+                            viewModel.patrolStatusEnum.value=Guard.GuardStatus.INTERVENTION.status
+                            navController.navigate(NavRoutes.InterventionScreen.route){
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }, onFailure = {
+                            //prevent changing not_responding to unavailable
+                            if(viewModel.isPatrolActive(SharedPreferencesManager.getStatus())) {
+                                viewModel.patrolStatusEnum.value =
+                                    Guard.GuardStatus.UNAVAILABLE.status
+                                SharedPreferencesManager.saveStatus(Guard.GuardStatus.UNAVAILABLE)
+                            }
+                        })
                         StatusScreen(
                             modifier = Modifier.padding(innerPadding),
+                            viewModel = viewModel,
+                            onConnectionButtonClick = { wasConnectedBefore, onSuccess ->
+                                if (wasConnectedBefore) {
+                                    WebSocketManager.setCloseCode(4000)
+                                    mainActivity.stopService(locationServiceIntent)
+                                } else {
+                                    WebSocketManager.setOnConnect { onSuccess() }
+                                    mainActivity.startService(locationServiceIntent)
+                                }
+                            },
                             onConfirmIntervention = {
-                                navController.navigate(NavRoutes.InterventionScreen.route)
+                                viewModel.sendStatusChange(Guard.GuardStatus.INTERVENTION)
+                                viewModel.confirmIntervention()
+                                navController.navigate(NavRoutes.InterventionScreen.route){
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             },
                             onRejectIntervention = {
-
+                                viewModel.rejectIntervention()
+                                viewModel.sendStatusChange(Guard.GuardStatus.AVAILABLE)
                             }
                         )
                     }
@@ -133,7 +186,11 @@ fun AppUI(
                                 },
                                 onLogout = {
                                     viewModel.logout(onSuccess = {
-                                        navController.navigate(NavRoutes.LoginScreen.route)
+                                        navController.navigate(NavRoutes.LoginScreen.route){
+                                            popUpTo(0) { inclusive = true }
+                                            launchSingleTop = true
+                                            restoreState = false
+                                        }
                                     },
                                         onFailure = { message ->
                                             snackBarMessage.value = message
@@ -142,22 +199,40 @@ fun AppUI(
                                 })
                         }
                     ) { innerPadding ->
+                        viewModel.connectIfNotConnected(mainActivity)
                         InterventionScreen(
                             modifier = Modifier.padding(innerPadding),
+                            viewModel = viewModel,
                             navigateToPos = {
 
                             },
                             confirmArrival = {
-
+                                viewModel.confirmInterventionArrival()
+                                viewModel.isInterventionVisible.value = false
                             },
                             stopIntervention = {
-                                navController.navigate(NavRoutes.StatusScreen.route)
+                                viewModel.cancelStartedIntervention()
+                                viewModel.isInterventionVisible.value = false
+                                viewModel.sendStatusChange(Guard.GuardStatus.AVAILABLE)
+                                navController.navigate(NavRoutes.StatusScreen.route){
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             },
                             callForSupport = {
-
+                                viewModel.isInterventionVisible.value = false
+                                viewModel.callForSupport()
                             },
                             endIntervention = {
-                                navController.navigate(NavRoutes.StatusScreen.route)
+                                viewModel.finishIntervention()
+                                viewModel.isInterventionVisible.value = false
+                                viewModel.sendStatusChange(Guard.GuardStatus.AVAILABLE)
+                                navController.navigate(NavRoutes.StatusScreen.route){
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             }
                         )
                     }
@@ -180,7 +255,7 @@ fun AppUI(
                     }
                     LoginScreen(
                         modifier = Modifier.padding(innerPadding),
-                        onLoginPress = {login, password ->
+                        onLoginPress = { login, password ->
                             viewModel.login(login = login, password, onSuccess = {
                                 navController.navigate(NavRoutes.StatusScreen.route) {
                                     popUpTo(navController.graph.startDestinationId) {
@@ -304,7 +379,8 @@ fun AppUI(
                                 viewModel.remindPassword(email, onSuccess = {
                                     snackBarMessage.value = "Email został wysłany na podany adres"
                                     snackBarColor.value = Color(0xFF5FBF2F)
-                                    snackBarIcon.intValue = R.drawable.outline_check_circle_outline_24
+                                    snackBarIcon.intValue =
+                                        R.drawable.outline_check_circle_outline_24
                                     isSnackBarVisible.value = true
                                     navController.popBackStack()
                                 },
@@ -325,7 +401,11 @@ fun AppUI(
                                     },
                                     onLogout = {
                                         viewModel.logout(onSuccess = {
-                                            navController.navigate(NavRoutes.LoginScreen.route)
+                                            navController.navigate(NavRoutes.LoginScreen.route){
+                                                popUpTo(0) { inclusive = true }
+                                                launchSingleTop = true
+                                                restoreState = false
+                                            }
                                         },
                                             onFailure = { message ->
                                                 snackBarMessage.value = message
@@ -350,7 +430,8 @@ fun AppUI(
                                             snackBarMessage.value =
                                                 "Użytkownik został zaktualizowany na podany adres"
                                             snackBarColor.value = Color(0xFF5FBF2F)
-                                            snackBarIcon.intValue = R.drawable.outline_check_circle_outline_24
+                                            snackBarIcon.intValue =
+                                                R.drawable.outline_check_circle_outline_24
                                             isSnackBarVisible.value = true
                                             navController.popBackStack()
                                         },
@@ -363,6 +444,19 @@ fun AppUI(
                     }
                 }
             }
+            if (viewModel.isDialogVisible.value)
+                AlertDialog(
+                    onDismissRequest = { },
+                    title = { Text("Uwaga !!!") },
+                    text = { Text("Z powodu braku reakcji na wezwanie, twój status zmienił się na nieaktywny") },
+                    confirmButton = {
+                        Button(modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                            onClick = { viewModel.isDialogVisible.value = false }) {
+                            Text("OK", color = MaterialTheme.colorScheme.onSecondary)
+                        }
+                    }
+                )
 
             if (isSnackBarVisible.value)
                 CustomSnackBar(

@@ -5,7 +5,7 @@ import com.pollub.awpfog.data.ApiService
 import com.pollub.awpfog.data.models.Credentials
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.data.models.GuardInfo
-import com.pollub.awpfog.network.RetrofitClient
+import com.pollub.awpfog.network.NetworkClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -15,7 +15,7 @@ import retrofit2.Response
  */
 class GuardRepository {
     // Instance of ApiService for making network requests
-    private val apiService: ApiService = RetrofitClient.instance
+    private val apiService: ApiService = NetworkClient.instance
 
     /**
      * Checks if a given login is already used in the system.
@@ -291,4 +291,35 @@ class GuardRepository {
             }
         })
     }
+    /**
+     * Retrieves the location assigned to an active intervention for a guard as a JSON string.
+     *
+     * If retrieves the associated location as a JSON string, e.g., `{"lat":51.1079,"lng":17.0385}`, execute onSuccess
+     *
+     * @param guardId The identifier of the guard whose active intervention location is being requested.
+     */
+    fun getActiveInterventionLocationAssignedToGuard(guardId: Int, onSuccess:(location:String)->Unit,onFailure:()->Unit){
+        apiService.getActiveInterventionLocationAssignedToGuard(guardId).enqueue(object : Callback<String> {
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                println("RESPONSE")
+                println(response.body())
+
+                if (response.isSuccessful) {
+                    if(response.body()!=null){
+                        onSuccess(response.body()!!)
+                    }else{
+                        onFailure()
+                    }
+                }else{
+                    onFailure()
+                }
+            }
+
+            override fun onFailure(call: Call<String>, t: Throwable) {
+                Log.e("UserRepository.checkClientToken", t.message.toString())
+                onFailure()
+            }
+        })
+    }
+
 }

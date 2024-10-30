@@ -16,6 +16,8 @@ object SharedPreferencesManager {
     private const val KEY_PHONE = "phone"
     private const val KEY_EMAIL = "email"
     private const val KEY_TOKEN = "token"
+    private const val KEY_STATUS = "status"
+    private const val KEY_LAST_REPORT_ID = "last_report_id"
 
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -27,6 +29,47 @@ object SharedPreferencesManager {
     fun init(context: Context) {
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
+
+    /**
+     * Saves status of guard to SharedPreferences.
+     *
+     * @param status The [Guard.GuardStatus] representing current status.
+     */
+    fun saveStatus(status: Guard.GuardStatus){
+        sharedPreferences.edit()
+            .putInt(KEY_STATUS, status.status)
+            .apply()
+    }
+
+    /**
+     * Gets status of guard from SharedPreferences.
+     *
+     * @return status code of [Guard.GuardStatus] representing current status, default GuardStatus.UNAVAILABLE.
+     */
+    fun getStatus():Int{
+        return sharedPreferences.getInt(KEY_STATUS, Guard.GuardStatus.UNAVAILABLE.status)
+    }
+
+    /**
+     * Saves Id of Report to SharedPreferences.
+     *
+     * @param reportId The Id of Report.
+     */
+    fun saveReportId(reportId: Int){
+        sharedPreferences.edit()
+            .putInt(KEY_LAST_REPORT_ID, reportId)
+            .apply()
+    }
+
+    /**
+     * Gets Id of Report from SharedPreferences.
+     *
+     * @return Id of Report.
+     */
+    fun getReportId():Int{
+        return sharedPreferences.getInt(KEY_LAST_REPORT_ID, -1)
+    }
+
 
     /**
      * Saves Guard information to SharedPreferences.
@@ -60,7 +103,7 @@ object SharedPreferencesManager {
                 surname = it.getString(KEY_SURNAME, "").toString(),
                 phone = it.getString(KEY_PHONE, "").toString(),
                 email = it.getString(KEY_EMAIL, "").toString(),
-                statusCode = Guard.GuardStatus.UNAVAILABLE.status,
+                statusCode = it.getInt(KEY_STATUS, Guard.GuardStatus.UNAVAILABLE.status),
                 location = "",
                 account_deleted = false,
                 token = it.getString(KEY_TOKEN, "")

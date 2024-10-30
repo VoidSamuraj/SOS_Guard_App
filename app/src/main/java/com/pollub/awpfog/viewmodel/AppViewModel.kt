@@ -1,10 +1,21 @@
 package com.pollub.awpfog.viewmodel
 
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Context.NOTIFICATION_SERVICE
+import android.content.Intent
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.google.gson.JsonParser
+import com.pollub.awpfog.MainActivity
 import com.pollub.awpfog.data.SharedPreferencesManager
+import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.data.models.GuardInfo
+import com.pollub.awpfog.network.NetworkClient.WebSocketManager
 import com.pollub.awpfog.repository.GuardRepository
+import com.pollub.awpfog.service.LocationService
 
 /**
  * ViewModel that manages user authentication and guard-related operations in the application.
@@ -13,6 +24,62 @@ import com.pollub.awpfog.repository.GuardRepository
  */
 class AppViewModel : ViewModel() {
     private val userRepository = GuardRepository()
+
+
+    var patrolStatusEnum = mutableStateOf(SharedPreferencesManager.getStatus())
+
+    fun isPatrolActive(): Boolean {
+        return patrolStatusEnum.value == Guard.GuardStatus.INTERVENTION.status || patrolStatusEnum.value == Guard.GuardStatus.AVAILABLE.status
+    }
+
+    fun isPatrolActive(guardStatus: Int): Boolean {
+        return guardStatus == Guard.GuardStatus.INTERVENTION.status || guardStatus == Guard.GuardStatus.AVAILABLE.status
+    }
+
+    var connectionStatus = mutableStateOf(false)
+
+    fun setIsSystemConnected(activity: MainActivity) {
+        connectionStatus.value = isForegroundServiceRunning(activity)
+    }
+
+    fun connectIfNotConnected(activity: MainActivity) {
+        if (!isForegroundServiceRunning(activity)) {
+            val locationServiceIntent = Intent(activity, LocationService::class.java)
+            WebSocketManager.setOnConnect { connectionStatus.value = true }
+            activity.startService(locationServiceIntent)
+        }
+    }
+
+    var isDialogVisible = mutableStateOf(false)
+
+    fun onWarning() {
+        isDialogVisible.value = true
+        isInterventionVisible.value = false
+        patrolStatusEnum.value = Guard.GuardStatus.NOT_RESPONDING.status
+        SharedPreferencesManager.saveStatus(Guard.GuardStatus.NOT_RESPONDING)
+    }
+
+    var isInterventionVisible = mutableStateOf(false)
+
+    val reportLocation = mutableStateOf(LatLng(0.0, 0.0))
+
+    fun clearReport() {
+        isInterventionVisible.value = false
+        reportLocation.value = LatLng(0.0, 0.0)
+    }
+
+    fun sendStatusChange(guardId: Int, status: Guard.GuardStatus) {
+        SharedPreferencesManager.saveStatus(status)
+        patrolStatusEnum.value = status.status
+        WebSocketManager.sendMessage("""{"guardId": $guardId, "status": ${status.status}}""")
+    }
+
+    fun sendStatusChange(status: Guard.GuardStatus) {
+        SharedPreferencesManager.saveStatus(status)
+        patrolStatusEnum.value = status.status
+        WebSocketManager.sendMessage("""{"guardId": ${SharedPreferencesManager.getGuard().id}, "status": ${status.status}}""")
+    }
+
 
     /**
      * Checks if the provided login is not already in use.
@@ -201,4 +268,71 @@ class AppViewModel : ViewModel() {
             Log.e("AuthViewModel", error ?: "Unknown error")
         })
     }
+
+    private fun isForegroundServiceRunning(context: Context): Boolean {
+        val notificationManager =
+            context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val activeNotifications = notificationManager.activeNotifications
+        return activeNotifications.any { it.id == LocationService.NOTIFICATION_ID }
+    }
+
+    fun getActiveInterventionLocationAssignedToGuard(
+        guardId: Int,
+        onSuccess: (location: LatLng) -> Unit,
+        onFailure: () -> Unit
+    ) {
+
+        userRepository.getActiveInterventionLocationAssignedToGuard(
+            guardId, onSuccess = { location ->
+                if (location.isNotEmpty()) {
+                    val jsonObject = JsonParser.parseString(location).asJsonObject
+                    if (jsonObject.has("reportId")) {
+                        SharedPreferencesManager.saveReportId(jsonObject.get("reportId").asInt)
+                    }
+                    if (jsonObject.has("lat") && jsonObject.has("lng")) {
+                        onSuccess(
+                            LatLng(
+                                jsonObject.get("lat").asDouble,
+                                jsonObject.get("lng").asDouble
+                            )
+                        )
+                    } else {
+                        onFailure()
+                    }
+                } else {
+                    onFailure()
+                }
+
+            },
+            onFailure = { onFailure() }
+        )
+    }
+
+    fun confirmIntervention() {
+        WebSocketManager.sendMessage("""{"intervention": accept }""")
+    }
+
+    fun rejectIntervention() {
+        WebSocketManager.sendMessage("""{"intervention": cancel }""")
+    }
+
+    fun confirmInterventionArrival() {
+        WebSocketManager.sendMessage("""{"reportId":${SharedPreferencesManager.getReportId()}, "intervention": confirmArrival }""")
+    }
+
+    fun finishIntervention() {
+        clearReport()
+        WebSocketManager.sendMessage("""{"reportId":${SharedPreferencesManager.getReportId()}, "intervention": finish }""")
+    }
+
+    fun cancelStartedIntervention() {
+        clearReport()
+        WebSocketManager.sendMessage("""{"reportId":${SharedPreferencesManager.getReportId()}, "intervention": cancelStarted }""")
+    }
+
+
+    fun callForSupport() {
+        WebSocketManager.sendMessage("""{"reportId":${SharedPreferencesManager.getReportId()}, "intervention": supportNeeded }""")
+    }
+
 }

@@ -108,7 +108,8 @@ data class Guard(
     enum class GuardStatus(val status: Int) {
         AVAILABLE(0),
         UNAVAILABLE(1),
-        INTERVENTION(2);
+        INTERVENTION(2),
+        NOT_RESPONDING(3);
 
         companion object {
             /**
