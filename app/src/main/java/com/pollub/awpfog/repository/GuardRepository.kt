@@ -301,9 +301,6 @@ class GuardRepository {
     fun getActiveInterventionLocationAssignedToGuard(guardId: Int, onSuccess:(location:String)->Unit,onFailure:()->Unit){
         apiService.getActiveInterventionLocationAssignedToGuard(guardId).enqueue(object : Callback<String> {
             override fun onResponse(call: Call<String>, response: Response<String>) {
-                println("RESPONSE")
-                println(response.body())
-
                 if (response.isSuccessful) {
                     if(response.body()!=null){
                         onSuccess(response.body()!!)

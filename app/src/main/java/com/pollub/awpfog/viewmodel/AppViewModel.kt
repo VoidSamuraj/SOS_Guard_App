@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.model.LatLng
@@ -16,6 +17,10 @@ import com.pollub.awpfog.data.models.GuardInfo
 import com.pollub.awpfog.network.NetworkClient.WebSocketManager
 import com.pollub.awpfog.repository.GuardRepository
 import com.pollub.awpfog.service.LocationService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel that manages user authentication and guard-related operations in the application.
@@ -25,6 +30,10 @@ import com.pollub.awpfog.service.LocationService
 class AppViewModel : ViewModel() {
     private val userRepository = GuardRepository()
 
+
+    var isInterventionVisible = mutableStateOf(false)
+
+    val reportLocation = mutableStateOf(LatLng(0.0, 0.0))
 
     var patrolStatusEnum = mutableStateOf(SharedPreferencesManager.getStatus())
 
@@ -53,15 +62,29 @@ class AppViewModel : ViewModel() {
     var isDialogVisible = mutableStateOf(false)
 
     fun onWarning() {
-        isDialogVisible.value = true
-        isInterventionVisible.value = false
-        patrolStatusEnum.value = Guard.GuardStatus.NOT_RESPONDING.status
-        SharedPreferencesManager.saveStatus(Guard.GuardStatus.NOT_RESPONDING)
+            isDialogVisible.value = true
+            isInterventionVisible.value = false
+            patrolStatusEnum.value = Guard.GuardStatus.NOT_RESPONDING.status
+            SharedPreferencesManager.saveStatus(Guard.GuardStatus.NOT_RESPONDING)
+    }
+    fun onInterventionCancelledByUser(){
+            isInterventionVisible.value = false
+            patrolStatusEnum.value = Guard.GuardStatus.UNAVAILABLE.status
+            SharedPreferencesManager.saveStatus(Guard.GuardStatus.UNAVAILABLE)
     }
 
-    var isInterventionVisible = mutableStateOf(false)
+    fun askIfReportActive(isActive: MutableState<Boolean>){
+        CoroutineScope(Dispatchers.IO).launch {
+            repeat(6) {
+                if (!isActive.value) {
+                    return@launch
+                }
 
-    val reportLocation = mutableStateOf(LatLng(0.0, 0.0))
+                WebSocketManager.sendMessage("""{"ask": isActive, "reportId": ${SharedPreferencesManager.getReportId()}}""")
+                delay(5000)
+            }
+        }
+    }
 
     fun clearReport() {
         isInterventionVisible.value = false

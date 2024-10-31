@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var viewModel: AppViewModel
     var isDarkMode = true
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

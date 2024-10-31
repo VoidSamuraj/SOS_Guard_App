@@ -100,6 +100,14 @@ fun AppUI(
     val registerScreenViewModel: RegisterScreenViewModel = viewModel()
     val navController = rememberNavController()
 
+    WebSocketManager.setOnInterventionCancelled {
+        navController.navigate(NavRoutes.StatusScreen.route) {
+            popUpTo(0) { inclusive = true }
+            launchSingleTop = true
+            restoreState = false
+        }
+    }
+
     AwpfogTheme(dynamicColor = false) {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(navController = navController, startDestination = NavRoutes.LoginScreen.route) {
@@ -115,7 +123,7 @@ fun AppUI(
                                 },
                                 onLogout = {
                                     viewModel.logout(onSuccess = {
-                                        navController.navigate(NavRoutes.LoginScreen.route){
+                                        navController.navigate(NavRoutes.LoginScreen.route) {
                                             popUpTo(0) { inclusive = true }
                                             launchSingleTop = true
                                             restoreState = false
@@ -128,24 +136,31 @@ fun AppUI(
                                 })
                         }
                     ) { innerPadding ->
-                        viewModel.setIsSystemConnected(mainActivity)
-                        viewModel.getActiveInterventionLocationAssignedToGuard (guardId = SharedPreferencesManager.getGuard().id, onSuccess = { location->
-                            viewModel.reportLocation.value=location
-                            SharedPreferencesManager.saveStatus(Guard.GuardStatus.INTERVENTION)
-                            viewModel.patrolStatusEnum.value=Guard.GuardStatus.INTERVENTION.status
-                            navController.navigate(NavRoutes.InterventionScreen.route){
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                                restoreState = false
-                            }
-                        }, onFailure = {
-                            //prevent changing not_responding to unavailable
-                            if(viewModel.isPatrolActive(SharedPreferencesManager.getStatus())) {
-                                viewModel.patrolStatusEnum.value =
-                                    Guard.GuardStatus.UNAVAILABLE.status
-                                SharedPreferencesManager.saveStatus(Guard.GuardStatus.UNAVAILABLE)
-                            }
-                        })
+                        LaunchedEffect(true) {
+                            viewModel.setIsSystemConnected(mainActivity)
+                            viewModel.getActiveInterventionLocationAssignedToGuard(
+                                guardId = SharedPreferencesManager.getGuard().id,
+                                onSuccess = { location ->
+                                    viewModel.reportLocation.value = location
+                                    SharedPreferencesManager.saveStatus(Guard.GuardStatus.INTERVENTION)
+                                    viewModel.patrolStatusEnum.value =
+                                        Guard.GuardStatus.INTERVENTION.status
+                                    navController.navigate(NavRoutes.InterventionScreen.route) {
+                                        popUpTo(0) { inclusive = true }
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
+                                },
+                                onFailure = {
+                                    //prevent changing not_responding to unavailable
+                                    if (viewModel.isPatrolActive(SharedPreferencesManager.getStatus())) {
+                                        viewModel.patrolStatusEnum.value =
+                                            Guard.GuardStatus.UNAVAILABLE.status
+                                        SharedPreferencesManager.saveStatus(Guard.GuardStatus.UNAVAILABLE)
+                                    }
+                                })
+
+                        }
                         StatusScreen(
                             modifier = Modifier.padding(innerPadding),
                             viewModel = viewModel,
@@ -161,7 +176,7 @@ fun AppUI(
                             onConfirmIntervention = {
                                 viewModel.sendStatusChange(Guard.GuardStatus.INTERVENTION)
                                 viewModel.confirmIntervention()
-                                navController.navigate(NavRoutes.InterventionScreen.route){
+                                navController.navigate(NavRoutes.InterventionScreen.route) {
                                     popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
                                     restoreState = false
@@ -186,7 +201,7 @@ fun AppUI(
                                 },
                                 onLogout = {
                                     viewModel.logout(onSuccess = {
-                                        navController.navigate(NavRoutes.LoginScreen.route){
+                                        navController.navigate(NavRoutes.LoginScreen.route) {
                                             popUpTo(0) { inclusive = true }
                                             launchSingleTop = true
                                             restoreState = false
@@ -214,7 +229,7 @@ fun AppUI(
                                 viewModel.cancelStartedIntervention()
                                 viewModel.isInterventionVisible.value = false
                                 viewModel.sendStatusChange(Guard.GuardStatus.AVAILABLE)
-                                navController.navigate(NavRoutes.StatusScreen.route){
+                                navController.navigate(NavRoutes.StatusScreen.route) {
                                     popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
                                     restoreState = false
@@ -228,7 +243,7 @@ fun AppUI(
                                 viewModel.finishIntervention()
                                 viewModel.isInterventionVisible.value = false
                                 viewModel.sendStatusChange(Guard.GuardStatus.AVAILABLE)
-                                navController.navigate(NavRoutes.StatusScreen.route){
+                                navController.navigate(NavRoutes.StatusScreen.route) {
                                     popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
                                     restoreState = false
@@ -401,7 +416,7 @@ fun AppUI(
                                     },
                                     onLogout = {
                                         viewModel.logout(onSuccess = {
-                                            navController.navigate(NavRoutes.LoginScreen.route){
+                                            navController.navigate(NavRoutes.LoginScreen.route) {
                                                 popUpTo(0) { inclusive = true }
                                                 launchSingleTop = true
                                                 restoreState = false

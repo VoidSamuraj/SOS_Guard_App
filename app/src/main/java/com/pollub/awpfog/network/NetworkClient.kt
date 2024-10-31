@@ -1,6 +1,7 @@
 package com.pollub.awpfog.network
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonParser
 import com.pollub.awpfog.BASE_URL
@@ -8,6 +9,9 @@ import com.pollub.awpfog.data.ApiService
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.viewmodel.AppViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -74,9 +78,10 @@ object NetworkClient {
         private var isConnected = false
         private var closeCode: Int? = null
         private var onConnect: (() -> Unit)? = null
+        private var onInterventionCancelled: (() -> Unit)? = null
         val currentLocation = mutableStateOf(Pair(0.0, 0.0))
         private var viewModel: AppViewModel? = null
-
+        private var isReportActive = mutableStateOf(true)
         fun setViewModel(vm: AppViewModel) {
             viewModel = vm
         }
@@ -87,6 +92,10 @@ object NetworkClient {
 
         fun setOnConnect(callback: () -> Unit) {
             onConnect = callback
+        }
+
+        fun setOnInterventionCancelled(callback: () -> Unit) {
+            onInterventionCancelled = callback
         }
 
         fun connect(url: String) {
@@ -107,7 +116,7 @@ object NetworkClient {
                                 }
 
                                 "confirm" -> {
-                                    if(jsonObject.has("reportId") || jsonObject.has("location")) {
+                                    if (jsonObject.has("reportId") || jsonObject.has("location")) {
                                         if (jsonObject.has("reportId")) {
                                             SharedPreferencesManager.saveReportId(jsonObject.get("reportId").asInt)
                                         }
@@ -123,17 +132,36 @@ object NetworkClient {
                                                 }
                                             }
                                         }
-                                        viewModel?.isInterventionVisible?.value=true
+                                        isReportActive.value = true
+                                        viewModel?.apply {
+                                            isInterventionVisible.value = true
+                                            askIfReportActive(isReportActive)
+                                        }
+
                                     }
                                 }
 
                                 "warning" -> {
                                     try {
                                         viewModel?.apply {
-                                            onWarning()
+                                            viewModelScope.launch {
+                                                onWarning()
+                                            }
                                         }
                                     } catch (_: Exception) {
+                                    }
+                                }
 
+                                "cancel", "notActive" -> {
+                                    isReportActive.value = false
+                                    try {
+                                        viewModel?.apply {
+                                            onInterventionCancelledByUser()
+                                        }
+                                        CoroutineScope(Dispatchers.Main).launch {
+                                            onInterventionCancelled?.invoke()
+                                        }
+                                    } catch (_: Exception) {
                                     }
                                 }
                             }

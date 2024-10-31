@@ -10,6 +10,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,7 +25,7 @@ import com.pollub.awpfog.ui.theme.AwpfogTheme
  * The section includes the intervention location and buttons for confirming or rejecting the intervention.
  * It is displayed only when the `isVisible` flag is true.
  *
- * @param isVisible Boolean flag that controls the visibility of the section.
+ * @param isVisible MutableStateOf<Boolean> flag that controls the visibility of the section.
  *                  If true, the intervention section is shown.
  * @param location A string representing the location of the intervention.
  *                 Displayed in the UI as the intervention location.
@@ -31,12 +34,12 @@ import com.pollub.awpfog.ui.theme.AwpfogTheme
  */
 @Composable
 fun InterventionSection(
-    isVisible: Boolean,
+    isVisible: MutableState<Boolean>,
     location: String,
     onConfirm: () -> Unit,
     onReject: () -> Unit
 ) {
-    if(isVisible)
+    if(isVisible.value)
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(text = "Interwencja", fontSize = 18.sp, color = Color.Red)
             Text(text = location, color = Color.Gray, fontSize = 14.sp)
@@ -69,6 +72,7 @@ fun InterventionSection(
 @Composable
 fun InterventionSectionPreview() {
     AwpfogTheme(dynamicColor = false) {
-        InterventionSection(true,"Nadystrzycka",{},{})
+        val visible = remember { mutableStateOf(true) }
+        InterventionSection(visible,"Nadystrzycka",{},{})
     }
 }

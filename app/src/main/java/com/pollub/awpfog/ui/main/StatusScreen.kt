@@ -76,7 +76,6 @@ fun StatusScreen(
                 location.longitude,
                 BuildConfig.MAPS_API_KEY
             )?.let { reportLocation = it }
-            viewModel.isInterventionVisible.value = reportLocation.isNotEmpty()
         }
     }
 
@@ -130,7 +129,7 @@ fun StatusScreen(
         }
         Spacer(modifier = Modifier.weight(1f))
         InterventionSection(
-            isVisible = viewModel.isInterventionVisible.value,
+            isVisible = viewModel.isInterventionVisible,
             location = reportLocation,
             onConfirm = onConfirmIntervention,
             onReject = {

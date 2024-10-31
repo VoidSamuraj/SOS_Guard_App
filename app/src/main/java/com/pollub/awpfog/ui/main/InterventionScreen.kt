@@ -106,7 +106,7 @@ fun InterventionScreen(
             ) {
                 Marker(
                     state = mapMarkerState,
-                    title = "MARKER"
+                    title = "Zgłoszenie"
                 )
             }
             Button(
