@@ -25,6 +25,7 @@ import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.network.NetworkClient
 import com.pollub.awpfog.ui.components.InterventionSection
+import com.pollub.awpfog.ui.components.RotatingLoader
 import com.pollub.awpfog.ui.components.StatusSection
 import com.pollub.awpfog.ui.theme.AwpfogTheme
 import com.pollub.awpfog.utils.getStreetName
@@ -127,7 +128,13 @@ fun StatusScreen(
             }) {
             Text(if (viewModel.connectionStatus.value) "Rozłącz" else "Połącz", color = Color.White)
         }
-        Spacer(modifier = Modifier.weight(1f))
+        if(viewModel.getIsSystemConnecting().value){
+            Spacer(modifier = Modifier.weight(1f))
+            RotatingLoader(Modifier.align(Alignment.CenterHorizontally),MaterialTheme.colorScheme.primary, circleRadius = 42.dp, strokeWidth = 10.dp)
+            Spacer(modifier = Modifier.weight(1f))
+        }else{
+            Spacer(modifier = Modifier.weight(1f))
+        }
         InterventionSection(
             isVisible = viewModel.isInterventionVisible,
             location = reportLocation,

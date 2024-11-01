@@ -33,7 +33,7 @@ class LocationService : Service() {
         const val NOTIFICATION_ID = 1
     }
 
-    private val guard =SharedPreferencesManager.getGuard()
+    private val guard = SharedPreferencesManager.getGuard()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     //associate coroutine with scope to easy cancel coroutine
@@ -72,27 +72,41 @@ class LocationService : Service() {
             LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 0).build(),
             object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
-                    val location = locationResult.lastLocation
-                    if (location != null) {
-                        val locationData =  """
-                            {"initMessage":true, "guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
-                            """.trimIndent()
-
-                        scope.launch {
-                            try {
-                                WebSocketManager.sendMessage(locationData, location.latitude ,location.longitude)
-                                Log.d("LocationService", "Initial location sent")
-                            } catch (e: Exception) {
-                                Log.e("LocationService", "Error sending initial location: ${e.message}")
-                            }
-                        }
-                        fusedLocationClient.removeLocationUpdates(this) // Wyłącz po pierwszym odczycie
-                    }
+                    sendInitMessage(locationResult, this)
                 }
             },
             Looper.getMainLooper()
         )
     }
+
+    fun sendInitMessage(
+        locationResult: LocationResult,
+        locationCallback: LocationCallback? = null
+    ) {
+        val location = locationResult.lastLocation
+        if (location != null) {
+            val locationData = """
+                            {"initMessage":true, "guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
+                            """.trimIndent()
+
+            scope.launch {
+                try {
+                    WebSocketManager.sendMessage(
+                        locationData,
+                        location.latitude,
+                        location.longitude
+                    )
+                    Log.d("LocationService", "Initial location sent")
+                } catch (e: Exception) {
+                    Log.e("LocationService", "Error sending initial location: ${e.message}")
+                }
+            }
+            locationCallback?.let {
+                fusedLocationClient.removeLocationUpdates(it)
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
@@ -107,7 +121,10 @@ class LocationService : Service() {
             object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
                     for (location in locationResult.locations) {
-                        sendLocationToServer(location)
+                        if (WebSocketManager.isConnecting.value)
+                            sendInitMessage(locationResult)
+                        else
+                            sendLocationToServer(location)
                     }
                 }
             },
@@ -117,14 +134,14 @@ class LocationService : Service() {
 
     private fun sendLocationToServer(location: Location) {
         //test
-        val lat = Random.nextDouble(49.0,54.8)
-        val lng = Random.nextDouble(14.1,24.2)
+        val lat = Random.nextDouble(49.0, 54.8)
+        val lng = Random.nextDouble(14.1, 24.2)
         /*
         val locationData =  """
                             {"guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
                             """.trimIndent()
         */
-        val locationData =  """
+        val locationData = """
                             {"guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${lat}, "longitude": ${lng}}
                             """.trimIndent()
         scope.launch {
@@ -145,7 +162,8 @@ class LocationService : Service() {
         val channelName = "Location Service"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+            val channel =
+                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }

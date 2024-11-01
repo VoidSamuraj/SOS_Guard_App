@@ -11,6 +11,7 @@ import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.viewmodel.AppViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -82,6 +83,9 @@ object NetworkClient {
         val currentLocation = mutableStateOf(Pair(0.0, 0.0))
         private var viewModel: AppViewModel? = null
         private var isReportActive = mutableStateOf(true)
+        val isConnecting = mutableStateOf(false)
+        var isServiceStopping = false
+
         fun setViewModel(vm: AppViewModel) {
             viewModel = vm
         }
@@ -98,13 +102,30 @@ object NetworkClient {
             onInterventionCancelled = callback
         }
 
+        private fun setIsConnected(connected: Boolean) {
+            isConnected = connected
+            viewModel?.connectionStatus?.value = connected
+        }
+
+
+        private fun reconnectWithDelay(url: String) {
+            isConnecting.value = true
+            CoroutineScope(Dispatchers.IO).launch() {
+                delay(5_000L)
+                if (!isServiceStopping) {
+                    connect(url)
+                }
+            }
+        }
+
         fun connect(url: String) {
             closeCode = null
+            isServiceStopping = false
             if (!isConnected) {
                 val request = Request.Builder().url(url).build()
                 webSocket = client.newWebSocket(request, object : WebSocketListener() {
                     override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-                        isConnected = true
+                        setIsConnected(true)
                     }
 
                     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -113,6 +134,8 @@ object NetworkClient {
                             when (jsonObject.get("status").asString) {
                                 "connected" -> {
                                     onConnect?.invoke()
+                                    isConnecting.value = false
+                                    setIsConnected(true)
                                 }
 
                                 "confirm" -> {
@@ -174,12 +197,18 @@ object NetworkClient {
                         t: Throwable,
                         response: okhttp3.Response?
                     ) {
-                        isConnected = false
+                        setIsConnected(false)
                         t.printStackTrace()
+                        if (!isServiceStopping) {
+                            reconnectWithDelay(url)
+                        }
                     }
 
                     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                        isConnected = false
+                        setIsConnected(false)
+                        if (!isServiceStopping) {
+                            reconnectWithDelay(url)
+                        }
                     }
                 })
             }
@@ -203,6 +232,7 @@ object NetworkClient {
         }
 
         fun disconnect() {
+            isServiceStopping = true
             viewModel?.apply {
                 connectionStatus.value = false
             }
@@ -211,9 +241,9 @@ object NetworkClient {
                     webSocket.close(closeCode!!, "Disconnect")
                 else
                     webSocket.close(1000, "Disconnect")
-                isConnected = false
-                closeCode = null
             }
+            setIsConnected(false)
+            closeCode = null
         }
     }
 

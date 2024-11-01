@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 class AppViewModel : ViewModel() {
     private val userRepository = GuardRepository()
 
-
     var isInterventionVisible = mutableStateOf(false)
 
     val reportLocation = mutableStateOf(LatLng(0.0, 0.0))
@@ -50,6 +49,8 @@ class AppViewModel : ViewModel() {
     fun setIsSystemConnected(activity: MainActivity) {
         connectionStatus.value = isForegroundServiceRunning(activity)
     }
+
+    fun getIsSystemConnecting() = WebSocketManager.isConnecting
 
     fun connectIfNotConnected(activity: MainActivity) {
         if (!isForegroundServiceRunning(activity)) {

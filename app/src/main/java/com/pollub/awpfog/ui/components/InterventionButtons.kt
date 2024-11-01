@@ -30,14 +30,23 @@ import com.pollub.awpfog.ui.theme.AwpfogTheme
  *                            If true, it indicates that the intervention is active.
  * @param supportAlongTheWay A MutableState that controls whether support has been called.
  *                           If true, it indicates that support is on its way.
+ * @param isSystemDisconnected A MutableState that controls system connection.
  * @param confirmArrival Callback function that is invoked when the "Confirm Arrival" button is clicked.
  * @param stopIntervention Callback function that is invoked when the "Stop Intervention" button is clicked.
  * @param callForSupport Callback function that is invoked when the "Call for Support" button is clicked.
  * @param endIntervention Callback function that is invoked when the "End Intervention" button is clicked.
  */
 @Composable
-fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlongTheWay:  MutableState<Boolean>, confirmArrival:()->Unit, stopIntervention:()->Unit, callForSupport:()->Unit, endIntervention:()->Unit){
-    if(!interventionStarted.value)
+fun InterventionButtons(
+    interventionStarted: MutableState<Boolean>,
+    supportAlongTheWay: MutableState<Boolean>,
+    isSystemDisconnected: MutableState<Boolean>,
+    confirmArrival: () -> Unit,
+    stopIntervention: () -> Unit,
+    callForSupport: () -> Unit,
+    endIntervention: () -> Unit
+) {
+    if (!interventionStarted.value)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -46,7 +55,7 @@ fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlong
         ) {
             Button(
                 onClick = {
-                    interventionStarted.value=true
+                    interventionStarted.value = true
                     confirmArrival()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -54,14 +63,20 @@ fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlong
                 modifier = Modifier
                     .height(80.dp)
                     .weight(1f)
-                    .padding(end = 8.dp)
+                    .padding(end = 8.dp),
+                enabled = !isSystemDisconnected.value
             ) {
-                Text(text = "Potwierdź przybycie", color = Color.White, fontSize = 18.sp, textAlign = TextAlign.Center)
+                Text(
+                    text = "Potwierdź przybycie",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
             }
             Button(
                 onClick = {
-                    interventionStarted.value=false
-                    supportAlongTheWay.value=false
+                    interventionStarted.value = false
+                    supportAlongTheWay.value = false
                     stopIntervention()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -69,9 +84,15 @@ fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlong
                 modifier = Modifier
                     .height(80.dp)
                     .weight(1f)
-                    .padding(start = 8.dp)
+                    .padding(start = 8.dp),
+                enabled = !isSystemDisconnected.value
             ) {
-                Text(text = "Przerwij interwencję", color = Color.White, fontSize = 18.sp, textAlign = TextAlign.Center)
+                Text(
+                    text = "Przerwij interwencję",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     else
@@ -83,8 +104,8 @@ fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlong
         ) {
             Button(
                 onClick = {
-                    interventionStarted.value=false
-                    supportAlongTheWay.value=false
+                    interventionStarted.value = false
+                    supportAlongTheWay.value = false
                     endIntervention()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -92,30 +113,50 @@ fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlong
                 modifier = Modifier
                     .height(100.dp)
                     .padding(bottom = 16.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                enabled = !isSystemDisconnected.value
 
             ) {
-                Text(text = "Zakończ interwencję", color = Color.White, fontSize = 18.sp, textAlign = TextAlign.Center)
+                Text(
+                    text = "Zakończ interwencję",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
             }
-            var buttonColor = if (supportAlongTheWay.value) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondary
+            var buttonColor =
+                (if (supportAlongTheWay.value) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondary)
             Button(
-                enabled = !supportAlongTheWay.value,
+                enabled = !supportAlongTheWay.value && !isSystemDisconnected.value,
                 onClick = {
-                    if(!supportAlongTheWay.value)
+                    if (!supportAlongTheWay.value)
                         callForSupport()
-                    supportAlongTheWay.value=true
+                    supportAlongTheWay.value = true
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = buttonColor, disabledContainerColor = buttonColor),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = buttonColor,
+                    disabledContainerColor = buttonColor
+                ),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
                     .height(100.dp)
                     .padding(bottom = 16.dp)
                     .fillMaxWidth()
             ) {
-                if(supportAlongTheWay.value)
-                    Text(text = "Wsparcie w drodze", color = Color.DarkGray, fontSize = 18.sp, textAlign = TextAlign.Center)
+                if (supportAlongTheWay.value)
+                    Text(
+                        text = "Wsparcie w drodze",
+                        color = Color.DarkGray,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
                 else
-                    Text(text = "Wezwij wsparcie", color = Color.White, fontSize = 18.sp, textAlign = TextAlign.Center)
+                    Text(
+                        text = "Wezwij wsparcie",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
             }
         }
 }
@@ -123,9 +164,17 @@ fun InterventionButtons(interventionStarted: MutableState<Boolean>, supportAlong
 @Preview(showBackground = true)
 @Composable
 fun InterventionButtonsPreview() {
-    val interventionStarted = remember{ mutableStateOf(true) }
-    val supportAlongTheWay = remember{ mutableStateOf(true) }
+    val interventionStarted = remember { mutableStateOf(true) }
+    val supportAlongTheWay = remember { mutableStateOf(true) }
+    val isSystemConnected = remember { mutableStateOf(true) }
     AwpfogTheme(dynamicColor = false) {
-        InterventionButtons(interventionStarted, supportAlongTheWay,{},{},{},{})
+        InterventionButtons(
+            interventionStarted,
+            supportAlongTheWay,
+            isSystemConnected,
+            {},
+            {},
+            {},
+            {})
     }
 }

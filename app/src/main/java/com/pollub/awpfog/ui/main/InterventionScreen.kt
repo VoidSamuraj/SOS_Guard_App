@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
@@ -32,6 +33,7 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.pollub.awpfog.R
 import com.pollub.awpfog.map.MapStyle
 import com.pollub.awpfog.ui.components.InterventionButtons
+import com.pollub.awpfog.ui.components.RotatingLoader
 import com.pollub.awpfog.ui.theme.AwpfogTheme
 import com.pollub.awpfog.viewmodel.AppViewModel
 
@@ -127,7 +129,9 @@ fun InterventionScreen(
                         .rotate(45f),
                 )
             }
-
+            if(viewModel.getIsSystemConnecting().value){
+                RotatingLoader(Modifier.align(Alignment.Center).zIndex(10f),MaterialTheme.colorScheme.primary, circleRadius = 42.dp, strokeWidth = 10.dp)
+            }
         }
 
         Column(
@@ -151,6 +155,7 @@ fun InterventionScreen(
         InterventionButtons(
             interventionStarted = interventionStarted,
             supportAlongTheWay = supportAlongTheWay,
+            isSystemDisconnected = viewModel.getIsSystemConnecting(),
             confirmArrival = confirmArrival,
             stopIntervention = stopIntervention,
             callForSupport = callForSupport,
