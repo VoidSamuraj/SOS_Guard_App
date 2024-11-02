@@ -125,6 +125,7 @@ object NetworkClient {
                 val request = Request.Builder().url(url).build()
                 webSocket = client.newWebSocket(request, object : WebSocketListener() {
                     override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
+                        //todo check if needed here
                         setIsConnected(true)
                     }
 

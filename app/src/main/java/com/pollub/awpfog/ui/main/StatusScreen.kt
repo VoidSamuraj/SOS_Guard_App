@@ -137,6 +137,7 @@ fun StatusScreen(
         }
         InterventionSection(
             isVisible = viewModel.isInterventionVisible,
+            isConnecting = viewModel.getIsSystemConnecting(),
             location = reportLocation,
             onConfirm = onConfirmIntervention,
             onReject = {

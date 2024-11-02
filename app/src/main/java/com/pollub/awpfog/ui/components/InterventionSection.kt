@@ -27,6 +27,7 @@ import com.pollub.awpfog.ui.theme.AwpfogTheme
  *
  * @param isVisible MutableStateOf<Boolean> flag that controls the visibility of the section.
  *                  If true, the intervention section is shown.
+ * @param isConnecting MutableStateOf<Boolean> flag that controls if buttons are enabled.
  * @param location A string representing the location of the intervention.
  *                 Displayed in the UI as the intervention location.
  * @param onConfirm A callback function that is invoked when the "Confirm Intervention" button is clicked.
@@ -35,12 +36,15 @@ import com.pollub.awpfog.ui.theme.AwpfogTheme
 @Composable
 fun InterventionSection(
     isVisible: MutableState<Boolean>,
+    isConnecting: MutableState<Boolean>,
     location: String,
     onConfirm: () -> Unit,
     onReject: () -> Unit
 ) {
-    if(isVisible.value)
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    if (isVisible.value)
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)) {
             Text(text = "Interwencja", fontSize = 18.sp, color = Color.Red)
             Text(text = location, color = Color.Gray, fontSize = 14.sp)
 
@@ -51,7 +55,8 @@ fun InterventionSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280)),
+                enabled = !isConnecting.value
             ) {
                 Text(text = "Potwierdź interwencję", color = Color.White)
             }
@@ -61,7 +66,8 @@ fun InterventionSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                enabled = !isConnecting.value
             ) {
                 Text(text = "Odrzuć interwencję", color = Color.White)
             }
@@ -73,6 +79,7 @@ fun InterventionSection(
 fun InterventionSectionPreview() {
     AwpfogTheme(dynamicColor = false) {
         val visible = remember { mutableStateOf(true) }
-        InterventionSection(visible,"Nadystrzycka",{},{})
+        val isConnecting = remember { mutableStateOf(true) }
+        InterventionSection(visible,isConnecting, "Nadystrzycka", {}, {})
     }
 }
