@@ -217,6 +217,7 @@ fun AppUI(
                         viewModel.connectIfNotConnected(mainActivity)
                         InterventionScreen(
                             modifier = Modifier.padding(innerPadding),
+                            context = mainActivity,
                             viewModel = viewModel,
                             navigateToPos = {
 

@@ -1,5 +1,7 @@
 package com.pollub.awpfog.ui.main
 
+import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,31 +12,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.mapbox.maps.ImageHolder
+import com.mapbox.maps.Style
+import com.mapbox.maps.extension.compose.MapEffect
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
+import com.mapbox.maps.extension.compose.annotation.rememberIconImage
+import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.extension.style.expressions.generated.Expression.Companion.interpolate
+import com.mapbox.maps.plugin.LocationPuck2D
+import com.mapbox.maps.plugin.PuckBearing
+import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.navigation.base.options.NavigationOptions
+import com.mapbox.navigation.core.lifecycle.MapboxNavigationApp
 import com.pollub.awpfog.R
-import com.pollub.awpfog.map.MapStyle
 import com.pollub.awpfog.ui.components.InterventionButtons
 import com.pollub.awpfog.ui.components.RotatingLoader
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.MyMapboxNavigationObserver
 import com.pollub.awpfog.viewmodel.AppViewModel
 
 /**
@@ -50,7 +62,7 @@ import com.pollub.awpfog.viewmodel.AppViewModel
  * @param endIntervention A callback function triggered when the user ends the intervention.
  *
  * Functionality:
- * - Displays a map using [GoogleMap] with a marker at a fixed location (Krańcowa 1, Lublin).
+ * - Displays a map using [MapboxMap] with a marker.
  * - Includes a button in the top-right corner for navigating to a position, which calls [navigateToPos].
  * - Displays basic information about the intervention, including its number and location.
  * - Provides action buttons for various intervention-related tasks using the [InterventionButtons] component.
@@ -58,6 +70,7 @@ import com.pollub.awpfog.viewmodel.AppViewModel
 @Composable
 fun InterventionScreen(
     modifier: Modifier,
+    context: Context,
     viewModel: AppViewModel,
     navigateToPos: () -> Unit,
     confirmArrival: () -> Unit,
@@ -69,25 +82,58 @@ fun InterventionScreen(
     var interventionStarted = remember { mutableStateOf(false) }
     var supportAlongTheWay = remember { mutableStateOf(false) }
 
+val mapViewportState = rememberMapViewportState{
+    setCameraOptions {
+        zoom(5.0)
+        center(viewModel.reportLocation.value)
+        pitch(0.0)
+        bearing(0.0)
+    }
+}
+    val marker = rememberIconImage(key = R.drawable.baseline_person_pin_24, painter = painterResource(R.drawable.baseline_person_pin_24))
 
-    var uiSettings = remember { mutableStateOf(MapUiSettings()) }
 
-    var properties = remember {
-        mutableStateOf(
-            MapProperties(
-                mapType = MapType.NORMAL,
-                mapStyleOptions = MapStyleOptions(MapStyle.json)
-            )
-        )
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Setup MapboxNavigationApp jeśli nie jest jeszcze skonfigurowany
+
+    val myObserver = MyMapboxNavigationObserver()
+
+    // Zarządzaj podłączaniem i odłączaniem w cyklu życia z DisposableEffect
+    DisposableEffect(lifecycleOwner) {
+        // Listener cyklu życia - dołączanie nawigacji
+        val observer = object : DefaultLifecycleObserver {
+            @SuppressLint("MissingPermission")
+            override fun onResume(owner: LifecycleOwner) {
+                MapboxNavigationApp.attach(owner)
+                MapboxNavigationApp.registerObserver(myObserver)
+                MapboxNavigationApp.current()?.startTripSession()
+            }
+
+            override fun onPause(owner: LifecycleOwner) {
+                MapboxNavigationApp.detach(owner)
+                MapboxNavigationApp.unregisterObserver(myObserver)
+                MapboxNavigationApp.current()?.stopTripSession()
+            }
+
+            override fun onCreate(owner: LifecycleOwner) {
+                if (!MapboxNavigationApp.isSetup()) {
+                    MapboxNavigationApp.setup {
+                        NavigationOptions.Builder(context).build()
+                    }
+                }
+            }
+        }
+
+        // Dodaj obserwatora do cyklu życia
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        // Zwróć funkcję czyszczącą, aby usunąć obserwatora przy odmontowaniu
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
-    val mapMarkerState = rememberMarkerState(position =viewModel.reportLocation.value)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.Builder()
-            .target(viewModel.reportLocation.value)
-            .zoom(14f)
-            .build()
-    }
 
     Column(
         modifier = modifier
@@ -99,18 +145,57 @@ fun InterventionScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = properties.value,
-                uiSettings = uiSettings.value
+            MapboxMap(
+                Modifier.fillMaxSize(),
+                mapViewportState =mapViewportState,
+                style = {
+                    MapStyle(style = "mapbox://styles/karolloo/cm30ff2p000vz01pm6y7o4dt7")
+                }
 
             ) {
-                Marker(
-                    state = mapMarkerState,
-                    title = "Zgłoszenie"
-                )
+                // Insert a PointAnnotation composable function with the geographic coordinate to the content of MapboxMap composable function.
+                PointAnnotation(point = viewModel.reportLocation.value) {
+                    iconImage = marker
+                }
+                MapStyle(style = Style.TRAFFIC_NIGHT)
+                MapEffect(Unit) { mapView ->
+                    mapView.mapboxMap.loadStyle(Style.TRAFFIC_NIGHT)
+                    mapView.location.updateSettings {
+                        setLocationPuck(
+                            LocationPuck2D(
+
+                            bearingImage = ImageHolder.from(R.drawable.baseline_navigation_24),
+
+                            shadowImage = ImageHolder.from(R.drawable.baseline_navigation_shadow_24),
+
+                            scaleExpression = interpolate {
+                                linear()
+                                zoom()
+
+                                stop(
+                                    0.0,
+                                    0.6
+                                )
+                                stop(
+                                    20.0,
+                                    1.0
+                                )
+
+                            }.toJson()
+
+                        )
+                        )
+                        enabled = true
+
+                        puckBearing = PuckBearing.HEADING
+
+                        puckBearingEnabled = true
+
+                        mapView.location.puckBearing = PuckBearing.HEADING
+                    }
+                }
             }
+
             Button(
                 onClick = { navigateToPos() },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -174,6 +259,7 @@ fun InterventionScreenPreview() {
         ) { innerPadding ->
             InterventionScreen(
                 modifier = Modifier.padding(innerPadding),
+                LocalContext.current,
                 AppViewModel(),
                 {},
                 {},

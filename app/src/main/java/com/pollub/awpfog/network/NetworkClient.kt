@@ -2,8 +2,8 @@ package com.pollub.awpfog.network
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonParser
+import com.mapbox.geojson.Point
 import com.pollub.awpfog.BASE_URL
 import com.pollub.awpfog.data.ApiService
 import com.pollub.awpfog.data.SharedPreferencesManager
@@ -149,9 +149,9 @@ object NetworkClient {
                                             if (locJson.has("lat") && locJson.has("lng")) {
                                                 SharedPreferencesManager.saveStatus(Guard.GuardStatus.INTERVENTION)
                                                 viewModel?.apply {
-                                                    reportLocation.value = LatLng(
-                                                        locJson.get("lat").asDouble,
-                                                        locJson.get("lng").asDouble
+                                                    reportLocation.value = Point.fromLngLat(
+                                                        locJson.get("lng").asDouble,
+                                                        locJson.get("lat").asDouble
                                                     )
                                                 }
                                             }

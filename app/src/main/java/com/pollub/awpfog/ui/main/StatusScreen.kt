@@ -9,7 +9,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,19 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pollub.awpfog.BuildConfig
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.data.models.Guard
-import com.pollub.awpfog.network.NetworkClient
 import com.pollub.awpfog.ui.components.InterventionSection
 import com.pollub.awpfog.ui.components.RotatingLoader
 import com.pollub.awpfog.ui.components.StatusSection
 import com.pollub.awpfog.ui.theme.AwpfogTheme
-import com.pollub.awpfog.utils.getStreetName
 import com.pollub.awpfog.viewmodel.AppViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Composable function that displays the status of various system components (connection, GPS, patrol),
@@ -60,7 +53,7 @@ fun StatusScreen(
 ) {
     var currentLocation by remember { mutableStateOf("") }
     var reportLocation by remember { mutableStateOf("") }
-
+/*
     LaunchedEffect(NetworkClient.WebSocketManager.currentLocation.value) {
         val location = NetworkClient.WebSocketManager.currentLocation.value
         CoroutineScope(Dispatchers.IO).launch {
@@ -79,7 +72,7 @@ fun StatusScreen(
             )?.let { reportLocation = it }
         }
     }
-
+*/
     fun onStatusChange() {
         val statusNow =
             if (!viewModel.isPatrolActive()) Guard.GuardStatus.AVAILABLE else Guard.GuardStatus.UNAVAILABLE

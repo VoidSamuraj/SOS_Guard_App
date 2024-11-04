@@ -8,8 +8,8 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonParser
+import com.mapbox.geojson.Point
 import com.pollub.awpfog.MainActivity
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.data.models.Guard
@@ -32,7 +32,7 @@ class AppViewModel : ViewModel() {
 
     var isInterventionVisible = mutableStateOf(false)
 
-    val reportLocation = mutableStateOf(LatLng(0.0, 0.0))
+    val reportLocation = mutableStateOf(Point.fromLngLat (0.0, 0.0))
 
     var patrolStatusEnum = mutableStateOf(SharedPreferencesManager.getStatus())
 
@@ -89,7 +89,7 @@ class AppViewModel : ViewModel() {
 
     fun clearReport() {
         isInterventionVisible.value = false
-        reportLocation.value = LatLng(0.0, 0.0)
+        reportLocation.value = Point.fromLngLat(0.0, 0.0)
     }
 
     fun sendStatusChange(guardId: Int, status: Guard.GuardStatus) {
@@ -302,7 +302,7 @@ class AppViewModel : ViewModel() {
 
     fun getActiveInterventionLocationAssignedToGuard(
         guardId: Int,
-        onSuccess: (location: LatLng) -> Unit,
+        onSuccess: (point: Point) -> Unit,
         onFailure: () -> Unit
     ) {
 
@@ -315,9 +315,9 @@ class AppViewModel : ViewModel() {
                     }
                     if (jsonObject.has("lat") && jsonObject.has("lng")) {
                         onSuccess(
-                            LatLng(
-                                jsonObject.get("lat").asDouble,
-                                jsonObject.get("lng").asDouble
+                            Point.fromLngLat(
+                                jsonObject.get("lng").asDouble,
+                                jsonObject.get("lat").asDouble
                             )
                         )
                     } else {

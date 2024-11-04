@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,15 +18,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val mapsKeyFile = rootProject.file("secret.properties")
-        val properties = Properties()
-        if (mapsKeyFile.exists()) {
-            properties.load(mapsKeyFile.inputStream())
-        }
-
-        val apiKey = properties.getProperty("MAPS_API_KEY") ?: ""
-        manifestPlaceholders["GOOGLE_KEY"] = apiKey
-        buildConfigField("String", "MAPS_API_KEY", "\"${apiKey}\"")
     }
 
     buildTypes {
@@ -65,14 +54,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    // Google Maps Compose
-    implementation("com.google.maps.android:maps-compose:6.1.2")
-
-    // Clustering, Street View, etc.
-    implementation("com.google.maps.android:maps-compose-utils:6.1.2")
-
-    // ScaleBar adn widgets
-    implementation("com.google.maps.android:maps-compose-widgets:6.1.2")
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.gms:play-services-maps:19.0.0")
@@ -80,12 +61,16 @@ dependencies {
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    implementation("com.mapbox.maps:android:11.8.0-rc.1")
+    implementation("com.mapbox.extension:maps-compose:11.8.0-rc.1")
+    implementation("com.mapbox.navigationcore:android:3.5.0-rc.1")
+    implementation("com.mapbox.navigationcore:ui-components:3.5.0-rc.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
