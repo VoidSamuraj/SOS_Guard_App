@@ -1,6 +1,8 @@
 package com.pollub.awpfog.ui.main
 
+import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +54,7 @@ import com.pollub.awpfog.ui.login.RegistrationScreenPersonalInformation
 import com.pollub.awpfog.ui.login.RemindPasswordScreen
 import com.pollub.awpfog.viewmodel.AppViewModel
 import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
+import kotlinx.coroutines.delay
 
 /**
  * Composable function that defines the main user interface of the application.
@@ -100,6 +104,8 @@ fun AppUI(
     val registerScreenViewModel: RegisterScreenViewModel = viewModel()
     val navController = rememberNavController()
 
+    var isLocationTurnedOn = rememberLocationState(mainActivity)
+
     WebSocketManager.setOnInterventionCancelled {
         navController.navigate(NavRoutes.StatusScreen.route) {
             popUpTo(0) { inclusive = true }
@@ -112,6 +118,7 @@ fun AppUI(
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(navController = navController, startDestination = NavRoutes.LoginScreen.route) {
                 composable(NavRoutes.StatusScreen.route) {
+
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         topBar = {
@@ -471,18 +478,54 @@ fun AppUI(
                     }
                 )
 
-            if (isSnackBarVisible.value)
+            if (isSnackBarVisible.value || !isLocationTurnedOn.value) {
+                if (!isLocationTurnedOn.value) {
+                    snackBarMessage.value = "Aby kożystać z systemu musisz włączyć lokalizację!"
+                }
                 CustomSnackBar(
                     modifier = Modifier.padding(innerPadding),
                     message = snackBarMessage.value,
                     backgroundColor = snackBarColor.value,
                     iconResId = snackBarIcon.intValue
                 ) {
-                    isSnackBarVisible.value = false
-                    snackBarColor.value = defaultColor
-                    snackBarIcon.intValue = R.drawable.baseline_error_outline_24
+                    if (isLocationTurnedOn.value) {
+                        isSnackBarVisible.value = false
+                        snackBarColor.value = defaultColor
+                        snackBarIcon.intValue = R.drawable.baseline_error_outline_24
+                    }
                 }
+            }
         }
 
     }
+}
+
+/**
+ * Function to check if location is enabled in device
+ *
+ * @param context [Context]app context
+ *
+ * @return [MutableState] of boolean representing if location is turned on
+ */
+@Composable
+fun rememberLocationState(context: Context): MutableState<Boolean> {
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val isLocationEnabled = remember { mutableStateOf(checkLocationEnabled(locationManager)) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val currentStatus = checkLocationEnabled(locationManager)
+            if (isLocationEnabled.value != currentStatus) {
+                isLocationEnabled.value = currentStatus
+            }
+            delay(1000L)
+        }
+    }
+
+    return isLocationEnabled
+}
+
+private fun checkLocationEnabled(locationManager: LocationManager): Boolean {
+    return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 }
