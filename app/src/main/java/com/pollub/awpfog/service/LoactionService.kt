@@ -26,7 +26,6 @@ import kotlinx.coroutines.*
 import com.pollub.awpfog.R
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.network.NetworkClient.WebSocketManager
-import kotlin.random.Random
 
 class LocationService : Service() {
     companion object {
@@ -41,6 +40,7 @@ class LocationService : Service() {
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
     override fun onCreate() {
+        Log.d("LocationService", "onCreate")
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -51,11 +51,13 @@ class LocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("LocationService", "onStartCommand")
         startLocationUpdates()
         return START_STICKY
     }
 
     override fun onDestroy() {
+        Log.d("LocationService", "onDestroy")
         super.onDestroy()
         stopLocationUpdates()
         job.cancel()
@@ -63,11 +65,13 @@ class LocationService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
+        Log.d("LocationService", "onBind")
         return null
     }
 
     @SuppressLint("MissingPermission")
     private fun sendStartupInfo() {
+        Log.d("LocationService", "sendStartupInfo")
         fusedLocationClient.requestLocationUpdates(
             LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 0).build(),
             object : LocationCallback() {
@@ -83,18 +87,21 @@ class LocationService : Service() {
         locationResult: LocationResult,
         locationCallback: LocationCallback? = null
     ) {
+        Log.d("LocationService", "sendInitMessage")
         val location = locationResult.lastLocation
         if (location != null) {
+            val lat = location.latitude
+            val lng = location.longitude
             val locationData = """
-                            {"initMessage":true, "guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
+                            {"initMessage":true, "guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${lat}, "longitude": ${lng}}
                             """.trimIndent()
 
             scope.launch {
                 try {
                     WebSocketManager.sendMessage(
                         locationData,
-                        location.latitude,
-                        location.longitude
+                        lat,
+                        lng
                     )
                     Log.d("LocationService", "Initial location sent")
                 } catch (e: Exception) {
@@ -109,6 +116,7 @@ class LocationService : Service() {
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
+        Log.d("LocationService", "startLocationUpdates")
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY, 10000L // every 10 seconds
         )
@@ -121,6 +129,7 @@ class LocationService : Service() {
             object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
                     for (location in locationResult.locations) {
+                        WebSocketManager.setCurrentLocation(location)
                         if (WebSocketManager.isConnecting.value)
                             sendInitMessage(locationResult)
                         else
@@ -133,14 +142,8 @@ class LocationService : Service() {
     }
 
     private fun sendLocationToServer(location: Location) {
-        //test
-        val lat = Random.nextDouble(49.0, 54.8)
-        val lng = Random.nextDouble(14.1, 24.2)
-        /*
-        val locationData =  """
-                            {"guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${location.latitude}, "longitude": ${location.longitude}}
-                            """.trimIndent()
-        */
+        val lat = location.latitude
+        val lng = location.longitude
         val locationData = """
                             {"guardId":${guard.id},"status":${SharedPreferencesManager.getStatus()}, "latitude": ${lat}, "longitude": ${lng}}
                             """.trimIndent()
@@ -154,10 +157,12 @@ class LocationService : Service() {
     }
 
     private fun stopLocationUpdates() {
+        Log.d("LocationService", "stopLocationUpdates")
         fusedLocationClient.removeLocationUpdates(object : LocationCallback() {})
     }
 
     private fun createNotification(): Notification {
+        Log.d("LocationService", "createNotification")
         val channelId = "location_service_channel"
         val channelName = "Location Service"
 

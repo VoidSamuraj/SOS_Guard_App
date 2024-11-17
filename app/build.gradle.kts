@@ -17,7 +17,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
+        val mapboxToken = gradle.extensions.extraProperties.get("mapboxToken") as String
+        buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"${mapboxToken}\"")
     }
 
     buildTypes {
@@ -70,7 +71,8 @@ dependencies {
     implementation("com.mapbox.maps:android:11.8.0-rc.1")
     implementation("com.mapbox.extension:maps-compose:11.8.0-rc.1")
     implementation("com.mapbox.navigationcore:android:3.5.0-rc.1")
-    implementation("com.mapbox.navigationcore:ui-components:3.5.0-rc.1")
+
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

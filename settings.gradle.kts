@@ -9,7 +9,7 @@ if (secretFile.exists()) {
 
 // Retrieve the Mapbox token from the properties file
 val mapboxToken: String = secretProperties.getProperty("MAPBOX_DOWNLOADS_TOKEN") ?: ""
-
+    gradle.extensions.extraProperties.set("mapboxToken", mapboxToken)
 pluginManagement {
     repositories {
         google {

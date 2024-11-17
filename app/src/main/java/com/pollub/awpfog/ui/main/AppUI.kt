@@ -219,9 +219,6 @@ fun AppUI(
                             modifier = Modifier.padding(innerPadding),
                             context = mainActivity,
                             viewModel = viewModel,
-                            navigateToPos = {
-
-                            },
                             confirmArrival = {
                                 viewModel.confirmInterventionArrival()
                                 viewModel.isInterventionVisible.value = false

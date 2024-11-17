@@ -1,8 +1,10 @@
 package com.pollub.awpfog.network
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonParser
+import com.mapbox.common.location.Location
 import com.mapbox.geojson.Point
 import com.pollub.awpfog.BASE_URL
 import com.pollub.awpfog.data.ApiService
@@ -90,6 +92,15 @@ object NetworkClient {
             viewModel = vm
         }
 
+        fun setCurrentLocation(androidLocation: android.location.Location){
+           viewModel?.currentLocation?.value = Location.Builder()
+               .latitude(androidLocation.latitude)      // szerokość geograficzna
+               .longitude(androidLocation.longitude)    // długość geograficzna
+               .altitude(androidLocation.altitude)      // wysokość
+               .speed(androidLocation.speed.toDouble())            // prędkość
+               .timestamp(androidLocation.time)         // czas w milisekundach
+               .build()
+        }
         fun setCloseCode(code: Int) {
             closeCode = code
         }
@@ -119,6 +130,7 @@ object NetworkClient {
         }
 
         fun connect(url: String) {
+
             closeCode = null
             isServiceStopping = false
             if (!isConnected) {
@@ -127,10 +139,13 @@ object NetworkClient {
                     override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
                         //todo check if needed here
                         setIsConnected(true)
+                        Log.d("WebSocketManager", "Connecting to WebSocket")
                     }
 
                     override fun onMessage(webSocket: WebSocket, text: String) {
                         val jsonObject = JsonParser.parseString(text).asJsonObject
+
+                        Log.d("WebSocketManager", "got message: $jsonObject")
                         if (jsonObject.has("status")) {
                             when (jsonObject.get("status").asString) {
                                 "connected" -> {
@@ -198,6 +213,7 @@ object NetworkClient {
                         t: Throwable,
                         response: okhttp3.Response?
                     ) {
+                        Log.d("WebSocketManager", "failure message: $response  $t")
                         setIsConnected(false)
                         t.printStackTrace()
                         if (!isServiceStopping) {
@@ -207,6 +223,7 @@ object NetworkClient {
 
                     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                         setIsConnected(false)
+                        Log.d("WebSocketManager", "closed WebSocket")
                         if (!isServiceStopping) {
                             reconnectWithDelay(url)
                         }

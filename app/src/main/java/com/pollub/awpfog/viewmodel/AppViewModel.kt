@@ -9,6 +9,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.gson.JsonParser
+import com.mapbox.common.location.Location
 import com.mapbox.geojson.Point
 import com.pollub.awpfog.MainActivity
 import com.pollub.awpfog.data.SharedPreferencesManager
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 class AppViewModel : ViewModel() {
     private val userRepository = GuardRepository()
 
+    val currentLocation = mutableStateOf<Location?>(null)
     var isInterventionVisible = mutableStateOf(false)
 
     val reportLocation = mutableStateOf(Point.fromLngLat (0.0, 0.0))

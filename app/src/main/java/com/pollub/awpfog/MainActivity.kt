@@ -17,8 +17,14 @@ import com.pollub.awpfog.utils.CheckPermissions
 import com.pollub.awpfog.utils.EnableEdgeToEdgeAndSetBarTheme
 import com.pollub.awpfog.viewmodel.AppViewModel
 
-const val BASE_URL = "https://10.0.2.2:8443/"
-const val BASE_WEBSOCKET_URL = "wss://10.0.2.2:8443/guardSocket"
+//debug
+//10.0.2.2:8443
+const val address="3.77.152.133:443"
+
+
+const val BASE_URL = "https://$address/"
+const val BASE_WEBSOCKET_URL = "wss://$address/guardSocket"
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var requestPermissionsLauncher: ActivityResultLauncher<Array<String>>

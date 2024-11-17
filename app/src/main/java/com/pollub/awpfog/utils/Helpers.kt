@@ -1,8 +1,13 @@
 package com.pollub.awpfog.utils
 
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
+import android.util.Log
+import com.mapbox.api.geocoding.v5.MapboxGeocoding
+import com.mapbox.api.geocoding.v5.models.GeocodingResponse
+import com.mapbox.geojson.Point
+import com.pollub.awpfog.BuildConfig
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.regex.Pattern
 
 
@@ -66,12 +71,13 @@ fun isEmailValid(email: String): Boolean {
     val pattern = Pattern.compile(emailRegex)
     return pattern.matcher(email).matches()
 }
+
 /**
  * Retrieves the street name based on latitude and longitude coordinates.
  *
  * @param latitude The latitude of the desired location.
  * @param longitude The longitude of the desired location.
- * @param apiKey The key of google api.
+ * @param onSuccess Callback which use response location string.
  * @return The street name if found, or null if not found or an error occurs.
  *
  * @throws java.io.IOException If the geocoding service is not available or fails to process the request.
@@ -80,27 +86,37 @@ fun isEmailValid(email: String): Boolean {
  * alternative geocoding methods or services for future implementations.
  */
 
-suspend fun getStreetName(latitude: Double, longitude: Double, apiKey: String): String? {
-    val client = OkHttpClient()
-    val url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$latitude,$longitude&key=$apiKey"
-    val request = Request.Builder().url(url).build()
 
-    return try {
-        val response = client.newCall(request).execute()
-        if (response.isSuccessful) {
-            val jsonResponse = JSONObject(response.body.string())
-            val results = jsonResponse.getJSONArray("results")
-            if (results.length() > 0) {
-                val address = results.getJSONObject(0).getString("formatted_address")
-                address
+fun getAddressFromCoordinates(
+    latitude: Double,
+    longitude: Double,
+    onSuccess: (location: String) -> Unit
+) {
+    val geocoder = MapboxGeocoding.builder()
+        .accessToken(BuildConfig.MAPBOX_ACCESS_TOKEN)
+        .query(Point.fromLngLat(longitude, latitude))
+        .build()
+
+    geocoder.enqueueCall(object : Callback<GeocodingResponse> {
+        override fun onResponse(
+            call: Call<GeocodingResponse>,
+            response: Response<GeocodingResponse>
+        ) {
+            if (response.isSuccessful) {
+                val features = response.body()?.features()
+                if (features != null && features.isNotEmpty()) {
+                    val address = features[0].text()
+                    address?.let { onSuccess(it) }
+                } else {
+                    Log.d("ReverseGeo", "No results found.")
+                }
             } else {
-                null
+                Log.e("ReverseGeo", "Error: ${response.code()}")
             }
-        } else {
-            null
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
+
+        override fun onFailure(call: Call<GeocodingResponse>, t: Throwable) {
+            Log.e("ReverseGeo", "Failed to fetch data: ${t.message}")
+        }
+    })
 }
