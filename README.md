@@ -7,6 +7,9 @@
 <img src="https://img.shields.io/badge/minSdk_33-%233DDC84" alt="minSdk 33"> 
 <img src="https://img.shields.io/badge/targetSdk_34-%23008B02" alt="targetSdk 34 "> 
 <img src="https://img.shields.io/badge/Mapbox-API-0073e6" alt="Mapbox API"> 
+<img src="https://img.shields.io/badge/HTTPS-Secure-green?color=008B02" alt="HTTPS Secure"> 
+<img src="https://img.shields.io/badge/WebSocket-WSS-blue?color=1E90FF" alt="WebSocket WSS">
+<img src="https://img.shields.io/badge/JWT-Secure-blue?color=008B8B" alt="JWT Secure">
 <img src="https://img.shields.io/badge/Retrofit-2.9.0-orange?color=FF4500" alt="Retrofit 2.9.0"> 
 <img src="https://img.shields.io/badge/ViewModel-Android-green?color=3DDC84" alt="ViewModel Android"> 
 <img src="https://img.shields.io/badge/Location_Service-Background-%23008B02" alt="Location Service Background"> 
