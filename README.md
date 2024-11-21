@@ -46,5 +46,7 @@ and set address on which you host server in `MainActivity` file:
 ```
 const val address="10.0.2.2:8443" //default local intelij adress(make sure it uses the same port as the server)
 ```
+You probably also wanna to enable keystore cert checking (temporaty turned off) in `NetworkClient`
+
 ## Getting Started:
 To start using the application, simply install the app and log in with your credentials. Make sure you have location services enabled for accurate tracking and navigation.
