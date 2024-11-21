@@ -22,7 +22,7 @@ It works with <a href="https://github.com/VoidSamuraj/SOS_Server" target="_blank
 ## Key Features:
 - **Real-Time Location Updates:** The app continuously tracks the security guard’s position and provides updates at short intervals.
 - **Status Update:** Guards can change their availability status (Available/Unavailable).
-- **Task Assignment:** Upon receiving an emergency request, the guarc can confirm it and start intervention, in the system  the status will change to "Intervention" for the guard guard. If guard will not respond (confirm or deny request), his status will change to "not responding"
+- **Task Assignment:** Upon receiving an emergency request, the guard can confirm it and start intervention, in the system  the status will change to "Intervention" for the guard guard. If guard will not respond (confirm or deny request), his status will change to "not responding"
 - **Client Navigation:** The app provides the client’s position and allows the guard to use navigation to reach the client after confirming the intervention.
 
 ## Technologies:
