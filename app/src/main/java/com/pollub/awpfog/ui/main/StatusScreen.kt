@@ -9,6 +9,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +26,7 @@ import com.pollub.awpfog.ui.components.InterventionSection
 import com.pollub.awpfog.ui.components.RotatingLoader
 import com.pollub.awpfog.ui.components.StatusSection
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.getAddressFromCoordinates
 import com.pollub.awpfog.viewmodel.AppViewModel
 
 /**
@@ -53,26 +55,13 @@ fun StatusScreen(
 ) {
     var currentLocation by remember { mutableStateOf("") }
     var reportLocation by remember { mutableStateOf("") }
-/*
-    LaunchedEffect(NetworkClient.WebSocketManager.currentLocation.value) {
-        val location = NetworkClient.WebSocketManager.currentLocation.value
-        CoroutineScope(Dispatchers.IO).launch {
-            getStreetName(location.first, location.second, BuildConfig.MAPS_API_KEY)?.let {
-                currentLocation = it
-            }
-        }
-    }
+
     LaunchedEffect(viewModel.reportLocation.value) {
-        val location = viewModel.reportLocation.value
-        CoroutineScope(Dispatchers.IO).launch {
-            getStreetName(
-                location.latitude,
-                location.longitude,
-                BuildConfig.MAPS_API_KEY
-            )?.let { reportLocation = it }
+        getAddressFromCoordinates(viewModel.reportLocation.value.latitude(),viewModel.reportLocation.value.longitude()) { location ->
+            reportLocation = location
         }
     }
-*/
+
     fun onStatusChange() {
         val statusNow =
             if (!viewModel.isPatrolActive()) Guard.GuardStatus.AVAILABLE else Guard.GuardStatus.UNAVAILABLE

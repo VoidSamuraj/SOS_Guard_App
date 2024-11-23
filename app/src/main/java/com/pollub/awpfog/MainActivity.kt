@@ -18,8 +18,8 @@ import com.pollub.awpfog.utils.EnableEdgeToEdgeAndSetBarTheme
 import com.pollub.awpfog.viewmodel.AppViewModel
 
 //debug
-//10.0.2.2:8443
-const val address="3.77.152.133:443"
+//const val address="10.0.2.2:8443"
+const val address="3.71.97.88:443"
 
 
 const val BASE_URL = "https://$address/"

@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import com.pollub.awpfog.ui.components.InterventionButtons
 import com.pollub.awpfog.ui.components.MyMap
 import com.pollub.awpfog.ui.components.RotatingLoader
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.getAddressFromCoordinates
 import com.pollub.awpfog.viewmodel.AppViewModel
 
 /**
@@ -64,13 +66,13 @@ fun InterventionScreen(
     val autoUpdateCamera = remember { mutableStateOf(true) }
     val centerToDestination = remember { mutableStateOf(false) }
     val currentLocationString = remember { mutableStateOf("") }
-/*
+
     LaunchedEffect(viewModel.reportLocation.value) {
         getAddressFromCoordinates(viewModel.reportLocation.value.latitude(),viewModel.reportLocation.value.longitude()) { location ->
             currentLocationString.value = location
         }
     }
-*/
+
 
     Column(
         modifier = modifier
