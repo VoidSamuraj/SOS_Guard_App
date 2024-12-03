@@ -1,6 +1,8 @@
 package com.pollub.awpfog
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -15,11 +17,15 @@ import com.pollub.awpfog.ui.main.AppUI
 import com.pollub.awpfog.ui.theme.AwpfogTheme
 import com.pollub.awpfog.utils.CheckPermissions
 import com.pollub.awpfog.utils.EnableEdgeToEdgeAndSetBarTheme
+import com.pollub.awpfog.utils.TokenManager
 import com.pollub.awpfog.viewmodel.AppViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 //debug
-//const val address="10.0.2.2:8443"
-const val address="3.71.97.88:443"
+const val address="10.0.2.2:8443"
+//const val address="3.71.97.88:443"
 
 
 const val BASE_URL = "https://$address/"
@@ -31,12 +37,26 @@ class MainActivity : ComponentActivity() {
     private lateinit var viewModel: AppViewModel
     var isDarkMode = true
 
+    private val handler = Handler(Looper.getMainLooper())
+    private val refreshInterval = TokenManager.TOKEN_EXPIRATION_THRESHOLD*500
+
+    private val refreshTask = object : Runnable {
+        override fun run() {
+            CoroutineScope(Dispatchers.Default).launch{
+                TokenManager.refreshTokenIfNeeded()
+            }
+            handler.postDelayed(this, refreshInterval)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         SharedPreferencesManager.init(this)
         viewModel = ViewModelProvider(this).get(AppViewModel::class.java)
         NetworkClient.WebSocketManager.setViewModel(viewModel)
+
+        handler.post(refreshTask)
 
         requestPermissionsLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -66,5 +86,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacks(refreshTask)
     }
 }

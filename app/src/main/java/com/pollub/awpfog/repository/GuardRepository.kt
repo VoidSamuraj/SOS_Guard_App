@@ -1,11 +1,16 @@
 package com.pollub.awpfog.repository
 
 import android.util.Log
+import com.pollub.awpfoc.data.models.JWTToken
+import com.pollub.awpfoc.data.models.TokenResponse
 import com.pollub.awpfog.data.ApiService
 import com.pollub.awpfog.data.models.Credentials
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.data.models.GuardInfo
 import com.pollub.awpfog.network.NetworkClient
+import com.pollub.awpfog.utils.TokenManager
+import com.pollub.awpfog.utils.TokenManager.isRefreshTokenExpired
+import kotlinx.coroutines.runBlocking
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -16,6 +21,39 @@ import retrofit2.Response
 class GuardRepository {
     // Instance of ApiService for making network requests
     private val apiService: ApiService = NetworkClient.instance
+
+    /**
+     *  Retrieves the new [TokenResponse.accessToken]
+     *
+     *  @param refreshToken valid RefreshToken
+     *  @return [TokenResponse] with new [TokenResponse.accessToken]
+     */
+    suspend fun refreshToken(refreshToken: String): TokenResponse? {
+        val response = apiService.refreshToken(refreshToken = refreshToken)
+        return if (response.isSuccessful) {
+            print(response.body())
+            response.body()
+        } else {
+            Log.e("UserRepository.isLoginUsed", "" + response.errorBody()?.string())
+            null
+        }
+    }
+
+    /**
+     *  Retrieves the new [TokenResponse] containing [TokenResponse.refreshToken] and [TokenResponse.accessToken]
+     *
+     *  @param refreshToken valid RefreshToken
+     *  @return [TokenResponse] with two new tokens
+     */
+    suspend fun refreshRefreshToken(refreshToken: String): TokenResponse? {
+        val response = apiService.refreshRefreshToken(refreshToken = refreshToken)
+        return if (response.isSuccessful) {
+            response.body()
+        } else {
+            Log.e("UserRepository.isLoginUsed", "" + response.errorBody()?.string())
+            null
+        }
+    }
 
     /**
      * Checks if a given login is already used in the system.
@@ -52,14 +90,14 @@ class GuardRepository {
      *
      * @param login The user's login.
      * @param password The user's password.
-     * @param callback Callback function that receives a Guard object on success, or an error message on failure.
+     * @param callback Callback function that receives a Guard object and LongTimeToken on success, or an error message on failure.
      */
-    fun login(login: String, password: String, callback: (Guard?, String?) -> Unit) {
+    fun login(login: String, password: String, callback: (Guard?, String?, String?) -> Unit) {
         val credentials = Credentials(login, password)
-        apiService.loginGuard(credentials).enqueue(object : Callback<Pair<String, GuardInfo>> {
+        apiService.loginGuard(credentials).enqueue(object : Callback<Triple<String, GuardInfo, JWTToken>> {
             override fun onResponse(
-                call: Call<Pair<String, GuardInfo>>,
-                response: Response<Pair<String, GuardInfo>>
+                call: Call<Triple<String, GuardInfo, JWTToken>>,
+                response: Response<Triple<String, GuardInfo, JWTToken>>
             ) {
                 if (response.isSuccessful) {
                     response.body()?.let { guard ->
@@ -69,19 +107,20 @@ class GuardRepository {
                                     guardInfo = guard.second,
                                     login = guard.first,
                                     password = ""
-                                ), null
+                                ), null,
+                                guard.third.token
                             )
                         } else {
-                            callback(null, "Error: No token")
+                            callback(null, "Error: No token", null)
                         }
                     }
                 } else {
-                    callback(null, response.errorBody()?.string())
+                    callback(null, response.errorBody()?.string(), null)
                     Log.e("UserRepository.login", "" + response.errorBody()?.string())
                 }
             }
 
-            override fun onFailure(call: Call<Pair<String, GuardInfo>>, t: Throwable) {
+            override fun onFailure(call: Call<Triple<String, GuardInfo, JWTToken>>, t: Throwable) {
                 Log.e("UserRepository.login", t.message.toString())
             }
         })
@@ -93,13 +132,13 @@ class GuardRepository {
      * @param login The login to register.
      * @param password The password for the account.
      * @param guardInfo GuardInfo containing additional user details.
-     * @param callback Callback function that receives a Guard object on success, or an error message on failure.
+     * @param callback Callback function that receives a Guard object and LongTimeToken on success, or an error message on failure.
      */
     fun register(
         login: String,
         password: String,
         guardInfo: GuardInfo,
-        callback: (Guard?, String?) -> Unit
+        callback: (Guard?, String?, String?) -> Unit
     ) {
 
         apiService.registerGuard(
@@ -109,10 +148,10 @@ class GuardRepository {
             surname = guardInfo.surname,
             email = guardInfo.email,
             phone = guardInfo.phone
-        ).enqueue(object : Callback<Pair<String, GuardInfo>> {
+        ).enqueue(object : Callback<Triple<String, GuardInfo, JWTToken>> {
             override fun onResponse(
-                call: Call<Pair<String, GuardInfo>>,
-                response: Response<Pair<String, GuardInfo>>
+                call: Call<Triple<String, GuardInfo, JWTToken>>,
+                response: Response<Triple<String, GuardInfo, JWTToken>>
             ) {
                 if (response.isSuccessful) {
                     response.body()?.let { guard ->
@@ -122,19 +161,20 @@ class GuardRepository {
                                     guardInfo = guard.second,
                                     login = guard.first,
                                     password = ""
-                                ), null
+                                ), null,
+                                guard.third.token
                             )
                         } else {
-                            callback(null, "Error: No token")
+                            callback(null, "Error: No token", null)
                         }
                     }
                 } else {
-                    callback(null, response.errorBody()?.string())
+                    callback(null, response.errorBody()?.string(), null)
                     Log.e("UserRepository.register", "" + response.errorBody()?.string())
                 }
             }
 
-            override fun onFailure(call: Call<Pair<String, GuardInfo>>, t: Throwable) {
+            override fun onFailure(call: Call<Triple<String, GuardInfo, JWTToken>>, t: Throwable) {
                 Log.e("UserRepository.register", t.message.toString())
             }
         })
@@ -186,6 +226,23 @@ class GuardRepository {
         phone: String?,
         callback: (Guard?, String?) -> Unit
     ) {
+        //check if RefreshToken is valid
+        if (isRefreshTokenExpired()) {
+            callback(null, "Error: Need authorization")
+            return
+        }
+        //refresh if Refresh AccessToken if needed
+        if (runBlocking {
+                if (TokenManager.refreshTokenIfNeeded() == null) {
+                    callback(null, "Error: Need authorization")
+                    return@runBlocking true
+                }
+                return@runBlocking false
+            })
+            return
+
+
+
         apiService.editGuard(
             id = id,
             login = login,

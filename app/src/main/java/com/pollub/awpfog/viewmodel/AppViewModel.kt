@@ -15,8 +15,8 @@ import com.pollub.awpfog.MainActivity
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.data.models.GuardInfo
+import com.pollub.awpfog.network.NetworkClient
 import com.pollub.awpfog.network.NetworkClient.WebSocketManager
-import com.pollub.awpfog.repository.GuardRepository
 import com.pollub.awpfog.service.LocationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
  * password reminders, and token validation. SharedPreferencesManager is used to save or clear user data.
  */
 class AppViewModel : ViewModel() {
-    private val userRepository = GuardRepository()
 
     val currentLocation = mutableStateOf<Location?>(null)
     var isInterventionVisible = mutableStateOf(false)
@@ -115,7 +114,7 @@ class AppViewModel : ViewModel() {
      * @param onFailure Callback function to be executed with an error message if the login is already used or if an error occurs.
      */
     fun isLoginNotUsed(login: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        userRepository.isLoginUsed(login, onSuccess = { isUsed ->
+        NetworkClient.userRepository.isLoginUsed(login, onSuccess = { isUsed ->
             if (isUsed)
                 onFailure("Login is already used")
             else
@@ -143,9 +142,12 @@ class AppViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (message: String) -> Unit
     ) {
-        userRepository.login(login, password) { guard, error ->
+        NetworkClient.userRepository.login(login, password) { guard, error, longTimeToken ->
             if (guard != null) {
                 SharedPreferencesManager.saveGuard(guard)
+                longTimeToken?.let {
+                    SharedPreferencesManager.saveSecureToken(it)
+                }
                 onSuccess()
             } else {
                 error?.let {
@@ -163,9 +165,10 @@ class AppViewModel : ViewModel() {
      * @param onFailure Callback function to be executed with an error message if logout fails.
      */
     fun logout(onSuccess: () -> Unit, onFailure: (message: String) -> Unit) {
-        userRepository.logout { success, error ->
+        NetworkClient.userRepository.logout { success, error ->
             if (success) {
                 SharedPreferencesManager.clear()
+                SharedPreferencesManager.removeSecureToken()
                 onSuccess()
             } else {
                 error?.let {
@@ -192,9 +195,12 @@ class AppViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (message: String) -> Unit
     ) {
-        userRepository.register(login, password, guard) { guard, error ->
+        NetworkClient.userRepository.register(login, password, guard) { guard, error, longTimeToken ->
             if (guard != null) {
                 SharedPreferencesManager.saveGuard(guard)
+                longTimeToken?.let {
+                    SharedPreferencesManager.saveSecureToken(it)
+                }
                 onSuccess()
             } else {
                 error?.let {
@@ -231,7 +237,7 @@ class AppViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (error: String) -> Unit
     ) {
-        userRepository.editGuard(
+        NetworkClient.userRepository.editGuard(
             id = id,
             login = login,
             password = password,
@@ -266,7 +272,7 @@ class AppViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (message: String) -> Unit
     ) {
-        userRepository.checkGuardToken(token) { guard, error ->
+        NetworkClient.userRepository.checkGuardToken(token) { guard, error ->
             if (guard != null) {
                 SharedPreferencesManager.saveGuard(guard)
                 onSuccess()
@@ -287,7 +293,10 @@ class AppViewModel : ViewModel() {
      * @param onFailure Callback function to be executed with an error message if the reminder fails.
      */
     fun remindPassword(email: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
-        userRepository.remindPassword(email, onSuccess = onSuccess, onFailure = { error ->
+        NetworkClient.userRepository.remindPassword(
+            email,
+            onSuccess = onSuccess,
+            onFailure = { error ->
             error?.let {
                 onFailure(error)
             }
@@ -308,7 +317,7 @@ class AppViewModel : ViewModel() {
         onFailure: () -> Unit
     ) {
 
-        userRepository.getActiveInterventionLocationAssignedToGuard(
+        NetworkClient.userRepository.getActiveInterventionLocationAssignedToGuard(
             guardId, onSuccess = { location ->
                 if (location.isNotEmpty()) {
                     val jsonObject = JsonParser.parseString(location).asJsonObject

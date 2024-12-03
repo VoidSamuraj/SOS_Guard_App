@@ -52,9 +52,11 @@ import com.pollub.awpfog.ui.components.EditGuardDataScreen
 import com.pollub.awpfog.ui.login.RegistrationScreen
 import com.pollub.awpfog.ui.login.RegistrationScreenPersonalInformation
 import com.pollub.awpfog.ui.login.RemindPasswordScreen
+import com.pollub.awpfog.utils.TokenManager
 import com.pollub.awpfog.viewmodel.AppViewModel
 import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 /**
  * Composable function that defines the main user interface of the application.
@@ -268,8 +270,35 @@ fun AppUI(
                                     }
                                 },
                                 onFailure = { message ->
-                                    snackBarMessage.value = message
-                                    isSnackBarVisible.value = true
+                                    val securedToken = SharedPreferencesManager.getSecureToken()
+                                    if (securedToken != null) {
+                                        viewModel.checkGuardToken(securedToken,
+                                            onSuccess = {
+                                                runBlocking {
+                                                    if (!TokenManager.isRefreshTokenExpired()) {
+                                                        TokenManager.refreshTokenIfNeeded()
+                                                        navController.navigate(NavRoutes.StatusScreen.route) {
+                                                            popUpTo(NavRoutes.LoginScreen.route) {
+                                                                inclusive = true
+                                                            }
+                                                        }
+                                                    } else {
+                                                        snackBarMessage.value = "Sesja wygasła"
+                                                        isSnackBarVisible.value = true
+                                                    }
+
+                                                }
+
+                                            },
+                                            onFailure = { message ->
+                                                snackBarMessage.value = message
+                                                isSnackBarVisible.value = true
+                                            }
+                                        )
+                                    }else{
+                                        snackBarMessage.value = "Sesja wygasła"
+                                        isSnackBarVisible.value = true
+                                    }
                                 })
                         }
                     }

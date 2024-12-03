@@ -26,14 +26,21 @@ import kotlinx.coroutines.*
 import com.pollub.awpfog.R
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.network.NetworkClient.WebSocketManager
+import com.pollub.awpfog.utils.TokenManager
+import com.pollub.awpfog.utils.TokenManager.isRefreshTokenExpired
 
 class LocationService : Service() {
+
     companion object {
         const val NOTIFICATION_ID = 1
+        private const val UPDATE_LOCATION_INTERVAL= 10_000L
+        private const val CHECK_TOKEN_INTERVAL_COUNT = TokenManager.TOKEN_EXPIRATION_THRESHOLD*500/UPDATE_LOCATION_INTERVAL
     }
 
     private val guard = SharedPreferencesManager.getGuard()
+    private var locationCallback: LocationCallback? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var tokenCheckCounter=0
 
     //associate coroutine with scope to easy cancel coroutine
     private val job = Job()
@@ -59,9 +66,9 @@ class LocationService : Service() {
     override fun onDestroy() {
         Log.d("LocationService", "onDestroy")
         super.onDestroy()
+        WebSocketManager.disconnect()
         stopLocationUpdates()
         job.cancel()
-        WebSocketManager.disconnect()
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -123,20 +130,31 @@ class LocationService : Service() {
             .setMinUpdateIntervalMillis(10000L)
             .setMaxUpdateDelayMillis(10000L)
             .build()
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                if(tokenCheckCounter>= CHECK_TOKEN_INTERVAL_COUNT){
+                    tokenCheckCounter=0
+                    if (isRefreshTokenExpired()){
+                        WebSocketManager.disconnect()
+                        return
+                    }
+                    runBlocking{TokenManager.refreshTokenIfNeeded()}
+                }else
+                    ++tokenCheckCounter
+
+                for (location in locationResult.locations) {
+                    WebSocketManager.setCurrentLocation(location)
+                    if (WebSocketManager.isConnecting.value)
+                        sendInitMessage(locationResult)
+                    else
+                        sendLocationToServer(location)
+                }
+            }
+        }
 
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
-            object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult) {
-                    for (location in locationResult.locations) {
-                        WebSocketManager.setCurrentLocation(location)
-                        if (WebSocketManager.isConnecting.value)
-                            sendInitMessage(locationResult)
-                        else
-                            sendLocationToServer(location)
-                    }
-                }
-            },
+            locationCallback!!,
             Looper.getMainLooper()
         )
     }
@@ -158,7 +176,7 @@ class LocationService : Service() {
 
     private fun stopLocationUpdates() {
         Log.d("LocationService", "stopLocationUpdates")
-        fusedLocationClient.removeLocationUpdates(object : LocationCallback() {})
+        locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
     }
 
     private fun createNotification(): Notification {

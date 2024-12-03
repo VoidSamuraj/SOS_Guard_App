@@ -10,6 +10,7 @@ import com.pollub.awpfog.BASE_URL
 import com.pollub.awpfog.data.ApiService
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.data.models.Guard
+import com.pollub.awpfog.repository.GuardRepository
 import com.pollub.awpfog.viewmodel.AppViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,33 +35,38 @@ import javax.net.ssl.X509TrustManager
  */
 object NetworkClient {
 
+    val userRepository: GuardRepository by lazy{
+        GuardRepository()
+    }
     // OkHttpClient instance configured with SSL settings and request interceptors.
-    private val client = OkHttpClient.Builder()
-        //TODO REMOVE THIS After Usage of trusted ssl keys
-        //TEMPORARY ALLOW ALL CERTS START
-        .sslSocketFactory(createTrustAllSslSocketFactory(), object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
-            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        })
-        .hostnameVerifier { hostname, session -> true }
-        // END
-        .addInterceptor { chain ->
-            // Retrieve the original request, token and provide token within header
-            val originalRequest = chain.request()
-            val token = SharedPreferencesManager.getToken()
+    private val client by lazy {
+        OkHttpClient.Builder()
+            //TODO REMOVE THIS After Usage of trusted ssl keys
+            //TEMPORARY ALLOW ALL CERTS START
+            .sslSocketFactory(createTrustAllSslSocketFactory(), object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+            })
+            .hostnameVerifier { hostname, session -> true }
+            // END
+            .addInterceptor { chain ->
+                // Retrieve the original request, token and provide token within header
+                val originalRequest = chain.request()
+                val token = SharedPreferencesManager.getToken()
 
-            val requestBuilder = originalRequest.newBuilder()
-                .apply {
-                    if (token != null) {
-                        header("Authorization", "Bearer $token")
+                val requestBuilder = originalRequest.newBuilder()
+                    .apply {
+                        if (token != null) {
+                            header("Authorization", "Bearer $token")
+                        }
                     }
-                }
 
-            val request = requestBuilder.build()
-            chain.proceed(request)
-        }
-        .build()
+                val request = requestBuilder.build()
+                chain.proceed(request)
+            }
+            .build()
+    }
 
     /**
      * Lazily initializes the Retrofit instance with the configured OkHttpClient and converters.
@@ -130,11 +136,12 @@ object NetworkClient {
         }
 
         fun connect(url: String) {
-
             closeCode = null
             isServiceStopping = false
             if (!isConnected) {
-                val request = Request.Builder().url(url).build()
+                val request = Request.Builder().url(url)
+                    .addHeader("Authorization", "Bearer ${SharedPreferencesManager.getToken()}")
+                    .build()
                 webSocket = client.newWebSocket(request, object : WebSocketListener() {
                     override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
                         //todo check if needed here

@@ -2,6 +2,8 @@ package com.pollub.awpfog.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import com.pollub.awpfog.data.models.Guard
 
 /**
@@ -18,8 +20,10 @@ object SharedPreferencesManager {
     private const val KEY_TOKEN = "token"
     private const val KEY_STATUS = "status"
     private const val KEY_LAST_REPORT_ID = "last_report_id"
+    private const val SECURED_JWT = "secure_jwt"
 
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var encryptedPreferences: SharedPreferences
 
     /**
      * Initializes the SessionManager with the provided context.
@@ -28,6 +32,13 @@ object SharedPreferencesManager {
      */
     fun init(context: Context) {
         sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        encryptedPreferences = EncryptedSharedPreferences.create(
+            "secure_prefs",
+            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+            context,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     /**
@@ -40,6 +51,45 @@ object SharedPreferencesManager {
             .putInt(KEY_STATUS, status.status)
             .apply()
     }
+
+    /**
+     * Saves user information to SharedPreferences.
+     *
+     * @param token The Customer access token.
+     */
+    fun saveToken(token: String){
+        sharedPreferences.edit()
+            .putString(KEY_TOKEN, token)
+            .apply()
+    }
+
+    /**
+     * Saves long term token in EncryptedSharedPreferences
+     *
+     * @param token The token to be saved
+     */
+    fun saveSecureToken(token: String) {
+        encryptedPreferences.edit()
+            .putString(SECURED_JWT, token)
+            .apply()
+    }
+
+    /**
+     * Get long term token from EncryptedSharedPreferences
+     *
+     * @return The saved token
+     */
+    fun getSecureToken(): String? {
+        return encryptedPreferences.getString(SECURED_JWT, null)
+    }
+
+    /**
+     * Remove long term token from EncryptedSharedPreferences
+     */
+    fun removeSecureToken() {
+        encryptedPreferences.edit().clear().apply()
+    }
+
 
     /**
      * Gets status of guard from SharedPreferences.

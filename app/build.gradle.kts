@@ -74,6 +74,9 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    implementation("androidx.security:security-crypto:1.0.0")
+    implementation("com.auth0:java-jwt:4.4.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

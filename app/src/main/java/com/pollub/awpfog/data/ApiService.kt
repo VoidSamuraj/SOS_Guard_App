@@ -1,8 +1,11 @@
 package com.pollub.awpfog.data
 
+import com.pollub.awpfoc.data.models.JWTToken
+import com.pollub.awpfoc.data.models.TokenResponse
 import com.pollub.awpfog.data.models.Credentials
 import com.pollub.awpfog.data.models.GuardInfo
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -34,7 +37,7 @@ interface ApiService {
      * @param surname The last name of the new guard.
      * @param email The email address of the new guard.
      * @param phone The phone number of the new guard.
-     * @return A [Call] that returns a pair containing a status message and the registered [GuardInfo].
+     * @return A [Call] that returns a Triple containing a login, registered [GuardInfo], and [JWTToken].
      */
     @FormUrlEncoded
     @POST("auth/guard/register")
@@ -45,16 +48,16 @@ interface ApiService {
         @Field("surname") surname: String,
         @Field("email") email: String,
         @Field("phone") phone: String
-    ): Call<Pair<String, GuardInfo>>
+    ): Call<Triple<String, GuardInfo, JWTToken>>
 
     /**
      * Logs in a guard using their credentials.
      *
      * @param credentials The login credentials of the guard.
-     * @return A [Call] that returns a pair containing a status message and the [GuardInfo] of the logged-in guard.
+     * @return A [Call] that returns a Triple containing a login, registered [GuardInfo], and [JWTToken].
      */
     @POST("auth/guard/login")
-    fun loginGuard(@Body credentials: Credentials): Call<Pair<String, GuardInfo>>
+    fun loginGuard(@Body credentials: Credentials): Call<Triple<String, GuardInfo, JWTToken>>
 
     /**
      * Checks the validity of the guard's session token.
@@ -108,6 +111,29 @@ interface ApiService {
         @Field("email") email: String?,
         @Field("phone") phone: String?
     ): Call<Pair<String, GuardInfo>>
+
+    /**
+     *  Retrieves the new [TokenResponse.accessToken]
+     *
+     *  @param refreshToken valid RefreshToken
+     *  @return [TokenResponse] with new [TokenResponse.accessToken]
+     */
+    @POST("auth/guard/refresh_token")
+    suspend fun refreshToken(
+        @Body refreshToken: String
+    ): Response<TokenResponse>
+
+    /**
+     *  Retrieves the new [TokenResponse] containing [TokenResponse.refreshToken] and [TokenResponse.accessToken]
+     *
+     *  @param refreshToken valid RefreshToken
+     *  @return [TokenResponse] with two new tokens
+     */
+    @POST("auth/guard/refresh_refresh_token")
+    suspend fun refreshRefreshToken(
+        @Body refreshToken: String
+    ): Response<TokenResponse>
+
 
     /**
      * Retrieves the location assigned to an active intervention for a guard as a JSON string.
