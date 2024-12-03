@@ -131,13 +131,16 @@ fun AppUI(
                                     navController.navigate(NavRoutes.EditGuardDataScreen.route)
                                 },
                                 onLogout = {
-                                    viewModel.logout(onSuccess = {
-                                        navController.navigate(NavRoutes.LoginScreen.route) {
-                                            popUpTo(0) { inclusive = true }
-                                            launchSingleTop = true
-                                            restoreState = false
-                                        }
-                                    },
+                                    viewModel.logout(
+                                        onSuccess = {
+                                            WebSocketManager.setCloseCode(4000)
+                                            mainActivity.stopService(locationServiceIntent)
+                                            navController.navigate(NavRoutes.LoginScreen.route) {
+                                                popUpTo(0) { inclusive = true }
+                                                launchSingleTop = true
+                                                restoreState = false
+                                            }
+                                        },
                                         onFailure = { message ->
                                             snackBarMessage.value = message
                                             isSnackBarVisible.value = true
@@ -209,13 +212,16 @@ fun AppUI(
                                     navController.navigate(NavRoutes.EditGuardDataScreen.route)
                                 },
                                 onLogout = {
-                                    viewModel.logout(onSuccess = {
-                                        navController.navigate(NavRoutes.LoginScreen.route) {
-                                            popUpTo(0) { inclusive = true }
-                                            launchSingleTop = true
-                                            restoreState = false
-                                        }
-                                    },
+                                    viewModel.logout(
+                                        onSuccess = {
+                                            WebSocketManager.setCloseCode(4000)
+                                            mainActivity.stopService(locationServiceIntent)
+                                            navController.navigate(NavRoutes.LoginScreen.route) {
+                                                popUpTo(0) { inclusive = true }
+                                                launchSingleTop = true
+                                                restoreState = false
+                                            }
+                                        },
                                         onFailure = { message ->
                                             snackBarMessage.value = message
                                             isSnackBarVisible.value = true
@@ -275,29 +281,20 @@ fun AppUI(
                                         viewModel.checkGuardToken(securedToken,
                                             onSuccess = {
                                                 runBlocking {
-                                                    if (!TokenManager.isRefreshTokenExpired()) {
-                                                        TokenManager.refreshTokenIfNeeded()
-                                                        navController.navigate(NavRoutes.StatusScreen.route) {
-                                                            popUpTo(NavRoutes.LoginScreen.route) {
-                                                                inclusive = true
-                                                            }
+                                                    TokenManager.refreshTokenIfNeeded()
+                                                    navController.navigate(NavRoutes.StatusScreen.route) {
+                                                        popUpTo(NavRoutes.LoginScreen.route) {
+                                                            inclusive = true
                                                         }
-                                                    } else {
-                                                        snackBarMessage.value = "Sesja wygasła"
-                                                        isSnackBarVisible.value = true
                                                     }
-
                                                 }
 
                                             },
-                                            onFailure = { message ->
-                                                snackBarMessage.value = message
+                                            onFailure = {
+                                                snackBarMessage.value = "Sesja wygasła"
                                                 isSnackBarVisible.value = true
                                             }
                                         )
-                                    }else{
-                                        snackBarMessage.value = "Sesja wygasła"
-                                        isSnackBarVisible.value = true
                                     }
                                 })
                         }
@@ -305,15 +302,17 @@ fun AppUI(
                     LoginScreen(
                         modifier = Modifier.padding(innerPadding),
                         onLoginPress = { login, password ->
-                            viewModel.login(login = login, password, onSuccess = {
+                            viewModel.login(login = login, password,
+                                onSuccess = {
                                 navController.navigate(NavRoutes.StatusScreen.route) {
                                     popUpTo(navController.graph.startDestinationId) {
                                         inclusive = true
                                     }
                                     launchSingleTop = true
                                 }
-                            },
+                                },
                                 onFailure = { message ->
+                                    println("ALEJAJA")
                                     snackBarMessage.value = message
                                     isSnackBarVisible.value = true
                                 })

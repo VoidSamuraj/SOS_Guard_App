@@ -17,11 +17,13 @@ import kotlinx.coroutines.Job
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.pollub.awpfog.BASE_WEBSOCKET_URL
+import com.pollub.awpfog.MainActivity
 import kotlinx.coroutines.*
 import com.pollub.awpfog.R
 import com.pollub.awpfog.data.SharedPreferencesManager
@@ -191,9 +193,20 @@ class LocationService : Service() {
             manager.createNotificationChannel(channel)
         }
 
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("Firma Ochroniarska")
-            .setContentText("Twoja lokalizacja jest udostępniana ochroniarzowi.")
+            .setContentText("System śledzi twoją lokalizację.")
+            .setContentIntent(pendingIntent)
             .setSmallIcon(R.drawable.baseline_navigation_24)
             .build()
     }

@@ -22,6 +22,10 @@ class GuardRepository {
     // Instance of ApiService for making network requests
     private val apiService: ApiService = NetworkClient.instance
 
+    private fun String?.filterString():String?{
+        return this?.replace(Regex("\\b\\d{1,3}(\\.\\d{1,3}){3}:\\d+\\b"), "")?. replace(" to","")?. replace("/","")
+    }
+
     /**
      *  Retrieves the new [TokenResponse.accessToken]
      *
@@ -74,12 +78,15 @@ class GuardRepository {
                         onSuccess(isLoginUsed)
                     }
                 } else {
-                    error(response.errorBody()?.string())
+                    val filteredError = response.errorBody()?.string()?.filterString()
+                    error(filteredError)
                     Log.e("UserRepository.isLoginUsed", "" + response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<Boolean?>, t: Throwable) {
+                val filteredError = t.message?.filterString()
+                error(filteredError)
                 Log.e("UserRepository.isLoginUsed", "" + t.message)
             }
         })
@@ -115,12 +122,15 @@ class GuardRepository {
                         }
                     }
                 } else {
-                    callback(null, response.errorBody()?.string(), null)
+                    val filteredError = response.errorBody()?.string()?.filterString()
+                    callback(null, filteredError, null)
                     Log.e("UserRepository.login", "" + response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<Triple<String, GuardInfo, JWTToken>>, t: Throwable) {
+                val filteredError = t.message.toString().filterString()
+                callback(null, filteredError, null)
                 Log.e("UserRepository.login", t.message.toString())
             }
         })
@@ -169,12 +179,15 @@ class GuardRepository {
                         }
                     }
                 } else {
-                    callback(null, response.errorBody()?.string(), null)
+                    val filteredError = response.errorBody().toString().filterString()
+                    callback(null, filteredError, null)
                     Log.e("UserRepository.register", "" + response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<Triple<String, GuardInfo, JWTToken>>, t: Throwable) {
+                val filteredError = t.message.toString().filterString()
+                callback(null, filteredError, null)
                 Log.e("UserRepository.register", t.message.toString())
             }
         })
@@ -191,12 +204,15 @@ class GuardRepository {
                 if (response.isSuccessful) {
                     callback(true, null)
                 } else {
-                    callback(false, response.errorBody()?.string())
+                    val filteredError = response.errorBody()?.string()?.filterString()
+                    callback(false, filteredError)
                     Log.e("UserRepository.logout", "" + response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<String>, t: Throwable) {
+                val filteredError = t.message?.filterString()
+                callback(false, filteredError)
                 Log.e("UserRepository.logout", t.message.toString())
             }
         })
@@ -272,12 +288,15 @@ class GuardRepository {
                         }
                     }
                 } else {
-                    callback(null, response.errorBody()?.string())
+                    val filteredError = response.errorBody()?.string().filterString()
+                    callback(null,filteredError)
                     Log.e("UserRepository.editGuard", "" + response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<Pair<String, GuardInfo>>, t: Throwable) {
+                val filteredError = t.message.filterString()
+                callback(null,filteredError)
                 Log.e("UserRepository.editGuard", "" + t.message)
             }
         })
@@ -310,12 +329,15 @@ class GuardRepository {
                         }
                     }
                 } else {
+                    val filteredError = response.errorBody()?.string().filterString()
+                    callback(null,filteredError)
                     Log.e("UserRepository.checkToken", "" + response.errorBody()?.string())
-                    callback(null, response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<Pair<String, GuardInfo>>, t: Throwable) {
+                val filteredError = t.message.filterString()
+                callback(null,filteredError)
                 Log.e("UserRepository.checkClientToken", t.message.toString())
             }
         })
@@ -338,12 +360,15 @@ class GuardRepository {
                 if (response.isSuccessful) {
                     onSuccess()
                 } else {
-                    onFailure(response.errorBody()?.string())
+                    val filteredError = response.errorBody().toString().filterString()
+                    onFailure(filteredError)
                     Log.e("UserRepository.remindPassword", "" + response.errorBody()?.string())
                 }
             }
 
             override fun onFailure(call: Call<String>, t: Throwable) {
+                val filteredError = t.message.toString().filterString()
+                onFailure(filteredError)
                 Log.e("UserRepository.checkClientToken", t.message.toString())
             }
         })
