@@ -1,8 +1,8 @@
 package com.pollub.awpfog.repository
 
 import android.util.Log
-import com.pollub.awpfoc.data.models.JWTToken
-import com.pollub.awpfoc.data.models.TokenResponse
+import com.pollub.awpfog.data.models.JWTToken
+import com.pollub.awpfog.data.models.TokenResponse
 import com.pollub.awpfog.data.ApiService
 import com.pollub.awpfog.data.models.Credentials
 import com.pollub.awpfog.data.models.Guard

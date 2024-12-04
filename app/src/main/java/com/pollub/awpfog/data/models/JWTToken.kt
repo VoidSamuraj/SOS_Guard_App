@@ -1,4 +1,4 @@
-package com.pollub.awpfoc.data.models
+package com.pollub.awpfog.data.models
 
 import kotlinx.serialization.Serializable
 

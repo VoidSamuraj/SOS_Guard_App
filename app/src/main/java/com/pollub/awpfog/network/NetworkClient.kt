@@ -186,6 +186,25 @@ object NetworkClient {
 
                                     }
                                 }
+                                "update" ->{
+                                    if (jsonObject.has("reportId") || jsonObject.has("location")) {
+                                        if (jsonObject.has("reportId")) {
+                                            SharedPreferencesManager.saveReportId(jsonObject.get("reportId").asInt)
+                                        }
+                                        if (jsonObject.has("location")) {
+                                            val locJson = jsonObject.getAsJsonObject("location")
+                                            if (locJson.has("lat") && locJson.has("lng")) {
+                                                SharedPreferencesManager.saveStatus(Guard.GuardStatus.INTERVENTION)
+                                                viewModel?.apply {
+                                                    reportLocation.value = Point.fromLngLat(
+                                                        locJson.get("lng").asDouble,
+                                                        locJson.get("lat").asDouble
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 
                                 "warning" -> {
                                     try {

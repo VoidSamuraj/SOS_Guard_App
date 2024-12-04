@@ -2,7 +2,7 @@ package com.pollub.awpfog.utils
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.exceptions.JWTDecodeException
-import com.pollub.awpfoc.data.models.TokenResponse
+import com.pollub.awpfog.data.models.TokenResponse
 import com.pollub.awpfog.data.SharedPreferencesManager
 import com.pollub.awpfog.network.NetworkClient
 

@@ -35,14 +35,17 @@ class LocationService : Service() {
 
     companion object {
         const val NOTIFICATION_ID = 1
-        private const val UPDATE_LOCATION_INTERVAL= 10_000L
-        private const val CHECK_TOKEN_INTERVAL_COUNT = TokenManager.TOKEN_EXPIRATION_THRESHOLD*500/UPDATE_LOCATION_INTERVAL
+        private const val UPDATE_LOCATION_INTERVAL = 10_000L
+        private const val CHECK_TOKEN_INTERVAL_COUNT =
+            TokenManager.TOKEN_EXPIRATION_THRESHOLD * 500 / UPDATE_LOCATION_INTERVAL
+        private const val MIN_DISTANCE_THRESHOLD_METERS = 5
     }
 
+    private var lastLocation: Location? = null
     private val guard = SharedPreferencesManager.getGuard()
     private var locationCallback: LocationCallback? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var tokenCheckCounter=0
+    private var tokenCheckCounter = 0
 
     //associate coroutine with scope to easy cancel coroutine
     private val job = Job()
@@ -98,6 +101,7 @@ class LocationService : Service() {
     ) {
         Log.d("LocationService", "sendInitMessage")
         val location = locationResult.lastLocation
+        lastLocation=location
         if (location != null) {
             val lat = location.latitude
             val lng = location.longitude
@@ -134,22 +138,24 @@ class LocationService : Service() {
             .build()
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                if(tokenCheckCounter>= CHECK_TOKEN_INTERVAL_COUNT){
-                    tokenCheckCounter=0
-                    if (isRefreshTokenExpired()){
+                if (tokenCheckCounter >= CHECK_TOKEN_INTERVAL_COUNT) {
+                    tokenCheckCounter = 0
+                    if (isRefreshTokenExpired()) {
                         WebSocketManager.disconnect()
                         return
                     }
-                    runBlocking{TokenManager.refreshTokenIfNeeded()}
-                }else
+                    runBlocking { TokenManager.refreshTokenIfNeeded() }
+                } else
                     ++tokenCheckCounter
 
                 for (location in locationResult.locations) {
-                    WebSocketManager.setCurrentLocation(location)
-                    if (WebSocketManager.isConnecting.value)
-                        sendInitMessage(locationResult)
-                    else
-                        sendLocationToServer(location)
+                    if (lastLocation == null || location.distanceTo(lastLocation!!) >= MIN_DISTANCE_THRESHOLD_METERS) {
+                        WebSocketManager.setCurrentLocation(location)
+                        if (WebSocketManager.isConnecting.value)
+                            sendInitMessage(locationResult)
+                        else
+                            sendLocationToServer(location)
+                    }
                 }
             }
         }
