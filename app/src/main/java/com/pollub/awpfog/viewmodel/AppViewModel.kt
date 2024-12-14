@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.gson.JsonParser
@@ -18,10 +17,6 @@ import com.pollub.awpfog.data.models.GuardInfo
 import com.pollub.awpfog.network.NetworkClient
 import com.pollub.awpfog.network.NetworkClient.WebSocketManager
 import com.pollub.awpfog.service.LocationService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /**
  * ViewModel that manages user authentication and guard-related operations in the application.
@@ -33,7 +28,7 @@ class AppViewModel : ViewModel() {
     val currentLocation = mutableStateOf<Location?>(null)
     var isInterventionVisible = mutableStateOf(false)
 
-    val reportLocation = mutableStateOf(Point.fromLngLat (0.0, 0.0))
+    val reportLocation = mutableStateOf(Point.fromLngLat(0.0, 0.0))
 
     var patrolStatusEnum = mutableStateOf(SharedPreferencesManager.getStatus())
 
@@ -64,28 +59,20 @@ class AppViewModel : ViewModel() {
     var isDialogVisible = mutableStateOf(false)
 
     fun onWarning() {
-            isDialogVisible.value = true
-            isInterventionVisible.value = false
-            patrolStatusEnum.value = Guard.GuardStatus.NOT_RESPONDING.status
-            SharedPreferencesManager.saveStatus(Guard.GuardStatus.NOT_RESPONDING)
-    }
-    fun onInterventionCancelledByUser(){
-            isInterventionVisible.value = false
-            patrolStatusEnum.value = Guard.GuardStatus.UNAVAILABLE.status
-            SharedPreferencesManager.saveStatus(Guard.GuardStatus.UNAVAILABLE)
+        isDialogVisible.value = true
+        isInterventionVisible.value = false
+        patrolStatusEnum.value = Guard.GuardStatus.NOT_RESPONDING.status
+        SharedPreferencesManager.saveStatus(Guard.GuardStatus.NOT_RESPONDING)
     }
 
-    fun askIfReportActive(isActive: MutableState<Boolean>){
-        CoroutineScope(Dispatchers.IO).launch {
-            repeat(6) {
-                if (!isActive.value) {
-                    return@launch
-                }
+    fun onInterventionCancelledByUser() {
+        isInterventionVisible.value = false
+        patrolStatusEnum.value = Guard.GuardStatus.UNAVAILABLE.status
+        SharedPreferencesManager.saveStatus(Guard.GuardStatus.UNAVAILABLE)
+    }
 
-                WebSocketManager.sendMessage("""{"ask": isActive, "reportId": ${SharedPreferencesManager.getReportId()}}""")
-                delay(5000)
-            }
-        }
+    fun askIfReportActive() {
+        WebSocketManager.sendMessage("""{"ask": isActive, "reportId": ${SharedPreferencesManager.getReportId()}}""")
     }
 
     fun clearReport() {
@@ -195,7 +182,11 @@ class AppViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (message: String) -> Unit
     ) {
-        NetworkClient.userRepository.register(login, password, guard) { guard, error, longTimeToken ->
+        NetworkClient.userRepository.register(
+            login,
+            password,
+            guard
+        ) { guard, error, longTimeToken ->
             if (guard != null) {
                 SharedPreferencesManager.saveGuard(guard)
                 longTimeToken?.let {
@@ -297,11 +288,11 @@ class AppViewModel : ViewModel() {
             email,
             onSuccess = onSuccess,
             onFailure = { error ->
-            error?.let {
-                onFailure(error)
-            }
-            Log.e("AuthViewModel", error ?: "Unknown error")
-        })
+                error?.let {
+                    onFailure(error)
+                }
+                Log.e("AuthViewModel", error ?: "Unknown error")
+            })
     }
 
     private fun isForegroundServiceRunning(context: Context): Boolean {
@@ -343,12 +334,33 @@ class AppViewModel : ViewModel() {
         )
     }
 
-    fun confirmIntervention() {
-        WebSocketManager.sendMessage("""{"intervention": accept }""")
+    fun checkIfReportIsAvailable(
+        reportId: Int = SharedPreferencesManager.getReportId(),
+        onSuccess: () -> Unit
+    ) {
+        if (reportId != -1)
+            NetworkClient.userRepository.checkIfReportIsAvailable(reportId,
+                onSuccess = {
+                    onSuccess()
+                })
     }
 
-    fun rejectIntervention() {
-        WebSocketManager.sendMessage("""{"intervention": cancel }""")
+    fun confirmIntervention(onSuccess: (() -> Unit)?=null) {
+        checkIfReportIsAvailable(
+            onSuccess = {
+                sendStatusChange(Guard.GuardStatus.INTERVENTION)
+                WebSocketManager.sendMessage("""{"intervention": accept }""")
+                onSuccess?.invoke()
+            })
+    }
+
+    fun rejectIntervention(onSuccess: (() -> Unit)?=null) {
+        checkIfReportIsAvailable(
+            onSuccess = {
+                sendStatusChange(Guard.GuardStatus.AVAILABLE)
+                WebSocketManager.sendMessage("""{"intervention": cancel }""")
+                onSuccess?.invoke()
+            })
     }
 
     fun confirmInterventionArrival() {

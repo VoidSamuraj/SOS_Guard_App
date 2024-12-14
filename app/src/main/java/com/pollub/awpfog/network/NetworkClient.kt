@@ -35,9 +35,10 @@ import javax.net.ssl.X509TrustManager
  */
 object NetworkClient {
 
-    val userRepository: GuardRepository by lazy{
+    val userRepository: GuardRepository by lazy {
         GuardRepository()
     }
+
     // OkHttpClient instance configured with SSL settings and request interceptors.
     private val client by lazy {
         OkHttpClient.Builder()
@@ -98,15 +99,16 @@ object NetworkClient {
             viewModel = vm
         }
 
-        fun setCurrentLocation(androidLocation: android.location.Location){
-           viewModel?.currentLocation?.value = Location.Builder()
-               .latitude(androidLocation.latitude)      // szerokość geograficzna
-               .longitude(androidLocation.longitude)    // długość geograficzna
-               .altitude(androidLocation.altitude)      // wysokość
-               .speed(androidLocation.speed.toDouble())            // prędkość
-               .timestamp(androidLocation.time)         // czas w milisekundach
-               .build()
+        fun setCurrentLocation(androidLocation: android.location.Location) {
+            viewModel?.currentLocation?.value = Location.Builder()
+                .latitude(androidLocation.latitude)      // szerokość geograficzna
+                .longitude(androidLocation.longitude)    // długość geograficzna
+                .altitude(androidLocation.altitude)      // wysokość
+                .speed(androidLocation.speed.toDouble())            // prędkość
+                .timestamp(androidLocation.time)         // czas w milisekundach
+                .build()
         }
+
         fun setCloseCode(code: Int) {
             closeCode = code
         }
@@ -176,17 +178,19 @@ object NetworkClient {
                                                         locJson.get("lat").asDouble
                                                     )
                                                 }
+
                                             }
                                         }
                                         isReportActive.value = true
                                         viewModel?.apply {
                                             isInterventionVisible.value = true
-                                            askIfReportActive(isReportActive)
+                                            askIfReportActive()
                                         }
 
                                     }
                                 }
-                                "update" ->{
+
+                                "update" -> {
                                     if (jsonObject.has("reportId") || jsonObject.has("location")) {
                                         if (jsonObject.has("reportId")) {
                                             SharedPreferencesManager.saveReportId(jsonObject.get("reportId").asInt)
@@ -220,10 +224,12 @@ object NetworkClient {
                                 "cancel", "notActive" -> {
                                     isReportActive.value = false
                                     try {
-                                        viewModel?.apply {
-                                            onInterventionCancelledByUser()
-                                        }
                                         CoroutineScope(Dispatchers.Main).launch {
+                                            SharedPreferencesManager.saveStatus(Guard.GuardStatus.AVAILABLE)
+                                            viewModel?.apply {
+                                                onInterventionCancelledByUser()
+                                                isInterventionVisible.value = false
+                                            }
                                             onInterventionCancelled?.invoke()
                                         }
                                     } catch (_: Exception) {
@@ -231,7 +237,6 @@ object NetworkClient {
                                 }
                             }
                         }
-                        println("Received message: $text")
                     }
 
                     override fun onFailure(

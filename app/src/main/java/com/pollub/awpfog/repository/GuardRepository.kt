@@ -401,4 +401,27 @@ class GuardRepository {
         })
     }
 
+    /**
+     * Retrieves the location assigned to an active intervention for a guard as a JSON string.
+     *
+     * If retrieves the associated location as a JSON string, e.g., `{"lat":51.1079,"lng":17.0385}`, execute onSuccess
+     *
+     * @param reportId The identifier of the guard whose active intervention location is being requested.
+     */
+    fun checkIfReportIsAvailable(reportId: Int, onSuccess:()->Unit){
+        apiService.checkIfReportIsAvailable(reportId).enqueue(object : Callback<Boolean> {
+            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                if (response.isSuccessful) {
+                    if(response.body() == true){
+                        onSuccess()
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<Boolean>, t: Throwable) {
+                Log.e("UserRepository.checkIfReportIsAvailable", t.message.toString())
+            }
+        })
+    }
+
 }

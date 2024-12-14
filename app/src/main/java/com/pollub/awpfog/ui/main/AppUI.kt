@@ -186,17 +186,16 @@ fun AppUI(
                                 }
                             },
                             onConfirmIntervention = {
-                                viewModel.sendStatusChange(Guard.GuardStatus.INTERVENTION)
-                                viewModel.confirmIntervention()
-                                navController.navigate(NavRoutes.InterventionScreen.route) {
-                                    popUpTo(0) { inclusive = true }
-                                    launchSingleTop = true
-                                    restoreState = false
+                                viewModel.confirmIntervention(){
+                                    navController.navigate(NavRoutes.InterventionScreen.route) {
+                                        popUpTo(0) { inclusive = true }
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
                                 }
                             },
                             onRejectIntervention = {
                                 viewModel.rejectIntervention()
-                                viewModel.sendStatusChange(Guard.GuardStatus.AVAILABLE)
                             }
                         )
                     }
@@ -312,7 +311,6 @@ fun AppUI(
                                 }
                                 },
                                 onFailure = { message ->
-                                    println("ALEJAJA")
                                     snackBarMessage.value = message
                                     isSnackBarVisible.value = true
                                 })

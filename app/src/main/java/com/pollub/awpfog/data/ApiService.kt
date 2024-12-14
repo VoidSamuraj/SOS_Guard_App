@@ -150,4 +150,16 @@ interface ApiService {
     @FormUrlEncoded
     @POST("action/getActiveInterventionLocationAssignedToGuard")
     fun getActiveInterventionLocationAssignedToGuard(@Field("guardId") guardId: Int): Call<String>
+    /**
+     * Retrieves the boolean indicating if report is not assigned to other patrol or cancelled.
+     *
+     * This function sends an HTTP POST request to the endpoint `/action/checkIfReportIsAvailable`,
+     * passing the report’s ID (`reportId`).
+     *
+     * @param reportId The identifier of the report
+     * @return A `Call<Boolean>` boolean indicating if report is not assigned to other patrol or cancelled
+     */
+    @FormUrlEncoded
+    @POST("action/checkIfReportIsAvailable")
+    fun checkIfReportIsAvailable(@Field("reportId") reportId: Int): Call<Boolean>
 }

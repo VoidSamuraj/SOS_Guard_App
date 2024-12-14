@@ -110,9 +110,6 @@ object TokenManager {
      */
     suspend fun refreshTokenIfNeeded(): TokenResponse? {
         val refreshToken = getRefreshToken() ?: return null
-        println("refreshifneeded")
-        println( isRefreshTokenNearExpiration())
-        println(isAccessTokenNearExpiration())
         return when {
             isRefreshTokenNearExpiration() -> refreshTokens(refreshToken, true)
             isAccessTokenNearExpiration() -> refreshTokens(refreshToken, false)
