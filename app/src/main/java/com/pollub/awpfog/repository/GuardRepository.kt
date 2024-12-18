@@ -411,6 +411,9 @@ class GuardRepository {
     fun checkIfReportIsAvailable(reportId: Int, onSuccess:()->Unit){
         apiService.checkIfReportIsAvailable(reportId).enqueue(object : Callback<Boolean> {
             override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                println("responsemy")
+                println(response)
+                println(response.body())
                 if (response.isSuccessful) {
                     if(response.body() == true){
                         onSuccess()

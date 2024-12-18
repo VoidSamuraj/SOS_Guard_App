@@ -77,6 +77,10 @@ dependencies {
     implementation("androidx.security:security-crypto:1.0.0")
     implementation("com.auth0:java-jwt:4.4.0")
 
+    testImplementation("com.squareup.okhttp3:mockwebserver:5.0.0-alpha.14")
+    testImplementation ("org.mockito:mockito-core:5.14.2")
+    testImplementation ("org.mockito:mockito-inline:5.2.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
