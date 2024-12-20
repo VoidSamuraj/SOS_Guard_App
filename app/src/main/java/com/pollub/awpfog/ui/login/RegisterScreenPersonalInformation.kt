@@ -25,11 +25,13 @@ import com.pollub.awpfog.utils.isPhoneValid
 import com.pollub.awpfog.utils.isUsernameValid
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.data.models.GuardInfo
+import com.pollub.awpfog.utils.TestTags
 import com.pollub.awpfog.utils.isEmailValid
 import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
 
@@ -78,7 +80,8 @@ fun RegistrationScreenPersonalInformation(
             label = { Text("Imię*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isNameValid) 16.dp else 4.dp),
+                .padding(bottom = if (isNameValid) 16.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_NAME_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -91,7 +94,9 @@ fun RegistrationScreenPersonalInformation(
                 text = "Imie powinno zawierać od 3 do 40 znaków.",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_NAME_INPUT_ERROR)
             )
         }
 
@@ -106,7 +111,8 @@ fun RegistrationScreenPersonalInformation(
             label = { Text("Nazwisko*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isSurnameValid) 16.dp else 4.dp),
+                .padding(bottom = if (isSurnameValid) 16.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_SURNAME_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -119,7 +125,9 @@ fun RegistrationScreenPersonalInformation(
                 text = "Nazwisko powinno zawierać od 3 do 40 znaków.",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_SURNAME_INPUT_ERROR)
             )
         }
 
@@ -132,7 +140,8 @@ fun RegistrationScreenPersonalInformation(
             label = { Text("Email*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isEmailValid) 16.dp else 4.dp),
+                .padding(bottom = if (isEmailValid) 16.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_EMAIL_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -145,7 +154,9 @@ fun RegistrationScreenPersonalInformation(
                 text = "Proszę podać poprawny email",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_EMAIL_INPUT_ERROR)
             )
         }
 
@@ -160,7 +171,8 @@ fun RegistrationScreenPersonalInformation(
             label = { Text("Nr telefonu*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isPhoneValid) 16.dp else 4.dp),
+                .padding(bottom = if (isPhoneValid) 16.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_PHONE_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next
@@ -173,19 +185,19 @@ fun RegistrationScreenPersonalInformation(
                 text = "Telefon powinien zawierać od 10 do 13 cyfr z opcjonalnym znakiem +",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_PHONE_INPUT_ERROR)
             )
         }
 
 
         Button(
             onClick = {
-
                 isNameValid = isUsernameValid(nameState)
                 isSurnameValid = isUsernameValid(surnameState)
                 isEmailValid = isEmailValid(emailState)
                 isPhoneValid = isPhoneValid(phoneState)
-
                 if (isNameValid && isSurnameValid && isEmailValid && isPhoneValid) {
                     onSignUp(
                         GuardInfo(
@@ -201,7 +213,9 @@ fun RegistrationScreenPersonalInformation(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_REGISTER_BUTTON),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Zarejestruj się", color = MaterialTheme.colorScheme.onSecondary)
@@ -215,7 +229,9 @@ fun RegistrationScreenPersonalInformation(
                 registerScreenViewModel.phone = phoneState
                 navBack()
             },
-            modifier = Modifier.padding(top = 16.dp)
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PERSONAL_INFORMATION_CANCEL_BUTTON)
         ) {
             Text(text = "Cofnij", color = MaterialTheme.colorScheme.onTertiaryContainer)
         }

@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pollub.awpfog.R
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.TestTags
 
 /**
  * Composable function that displays a top app bar with user information,
@@ -61,9 +63,11 @@ fun TopBar(clientName: String, iconId: Int, onIconClick: () -> Unit, onLogout: (
                         .clickable {
                             onIconClick()
                         }
+                        .testTag(TestTags.TOP_BAR_ICON_BUTTON)
                 )
                 Text(
-                    modifier = Modifier.padding(start = 8.dp),
+                    modifier = Modifier.padding(start = 8.dp)
+                        .testTag(TestTags.TOP_BAR_USER_NAME),
                     text = clientName,
                     color = Color.White,
                     fontSize = 18.sp,
@@ -78,6 +82,7 @@ fun TopBar(clientName: String, iconId: Int, onIconClick: () -> Unit, onLogout: (
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A5061)),
                 shape = CircleShape,
                 modifier = Modifier.padding(8.dp)
+                    .testTag(TestTags.TOP_BAR_LOGOUT_BUTTON)
             ) {
                 Text(text = "Wyloguj", color = Color.White)
             }

@@ -20,11 +20,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.TestTags
 import com.pollub.awpfog.utils.isEmailValid
 
 /**
@@ -77,7 +79,8 @@ fun RemindPasswordScreen(
             label = { Text("Email*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isEmailValid) 32.dp else 4.dp),
+                .padding(bottom = if (isEmailValid) 32.dp else 4.dp)
+                .testTag(TestTags.REMIND_PASSWORD_SCREEN_EMAIL_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email)
         )
         if (!isEmailValid) {
@@ -85,7 +88,9 @@ fun RemindPasswordScreen(
                 text = "Proszę podać poprawny email",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier
+                    .padding(bottom = 24.dp)
+                    .testTag(TestTags.REMIND_PASSWORD_SCREEN_EMAIL_INPUT_ERROR)
             )
         }
 
@@ -98,7 +103,8 @@ fun RemindPasswordScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .testTag(TestTags.REMIND_PASSWORD_SCREEN_REMIND_BUTTON),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Wyślij przypomnienie", color = MaterialTheme.colorScheme.onSecondary)
@@ -107,7 +113,9 @@ fun RemindPasswordScreen(
             onClick = {
                 navBack()
             },
-            modifier = Modifier.padding(bottom = 100.dp)
+            modifier = Modifier
+                .padding(bottom = 100.dp)
+                .testTag(TestTags.REMIND_PASSWORD_SCREEN_NAV_BACK)
         ) {
             Text(text = "Wróć do logowania", color = MaterialTheme.colorScheme.onTertiaryContainer)
         }

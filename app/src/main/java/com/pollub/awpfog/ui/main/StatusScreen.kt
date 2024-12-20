@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,7 +48,7 @@ import com.pollub.awpfog.viewmodel.AppViewModel
  */
 @Composable
 fun StatusScreen(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     viewModel: AppViewModel,
     onConnectionButtonClick: (wasConnectedBefore: Boolean, onSuccessConnect: () -> Unit) -> Unit,
     onConfirmIntervention: () -> Unit,
@@ -148,10 +149,12 @@ fun LocationInfo(currentLocation: String) {
         }
 }
 
+//works only on emulator, need to mock SharedPreferences for preview
 @Preview(showBackground = true)
 @Composable
 fun StatusScreenPreview() {
     AwpfogTheme(dynamicColor = false) {
+        SharedPreferencesManager.init(LocalContext.current)
         StatusScreen(Modifier, AppViewModel(), { _, _ -> }, {}, {})
     }
 }

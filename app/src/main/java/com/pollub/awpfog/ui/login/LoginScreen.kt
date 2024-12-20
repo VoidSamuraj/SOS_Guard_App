@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pollub.awpfog.R
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.TestTags
 
 
 /**
@@ -89,7 +91,8 @@ fun LoginScreen(
             label = { Text("Login*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .testTag(TestTags.LOGIN_SCREEN_LOGIN_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -104,7 +107,8 @@ fun LoginScreen(
             visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp),
+                .padding(bottom = 32.dp)
+                .testTag(TestTags.LOGIN_SCREEN_PASSWORD_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
@@ -125,7 +129,8 @@ fun LoginScreen(
             onClick = { onLoginPress(loginState.value, passwordState.value) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp),
+                .padding(bottom = 8.dp)
+                .testTag(TestTags.LOGIN_SCREEN_LOGIN_BUTTON),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Zaloguj", color = MaterialTheme.colorScheme.onSecondary)
@@ -135,7 +140,8 @@ fun LoginScreen(
             onClick = onRemindPasswordPress,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .testTag(TestTags.LOGIN_SCREEN_FORGOT_PASSWORD_BUTTON),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Zapomniałem hasła", color = MaterialTheme.colorScheme.onSecondary)
@@ -154,7 +160,8 @@ fun LoginScreen(
             onClick = navToRegister,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 100.dp),
+                .padding(bottom = 100.dp)
+                .testTag(TestTags.LOGIN_SCREEN_REGISTER_BUTTON),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Załóż nowe konto", color = MaterialTheme.colorScheme.onSecondary)

@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.pollub.awpfog.R
 import com.pollub.awpfog.data.models.Guard
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.TestTags
 import com.pollub.awpfog.utils.isEmailValid
 import com.pollub.awpfog.utils.isLoginValid
 import com.pollub.awpfog.utils.isPasswordValid
@@ -136,7 +138,8 @@ fun EditGuardDataScreen(
                 label = { Text("Login*") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (isLoginValid) 16.dp else 4.dp),
+                    .padding(bottom = if (isLoginValid) 16.dp else 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_LOGIN_INPUT),
                 isError = !isLoginValid,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Text,
@@ -150,6 +153,7 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_LOGIN_INPUT_ERROR)
                 )
             }
             OutlinedTextField(
@@ -162,7 +166,8 @@ fun EditGuardDataScreen(
                 visualTransformation = if (passwordVisible) VisualTransformation.Companion.None else PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (isPasswordValid) 16.dp else 4.dp),
+                    .padding(bottom = if (isPasswordValid) 16.dp else 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_PASSWORD_INPUT),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Password,
                     imeAction = ImeAction.Companion.Next
@@ -187,6 +192,7 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_PASSWORD_INPUT_ERROR)
                 )
             }
             OutlinedTextField(
@@ -200,7 +206,8 @@ fun EditGuardDataScreen(
                 visualTransformation = if (newPasswordVisible) VisualTransformation.Companion.None else PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (isNewPasswordValid) 16.dp else 4.dp),
+                    .padding(bottom = if (isNewPasswordValid) 16.dp else 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_NEW_PASSWORD_INPUT),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Password,
                     imeAction = ImeAction.Companion.Next
@@ -225,6 +232,7 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 24.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_NEW_PASSWORD_INPUT_ERROR)
                 )
             }
             OutlinedTextField(
@@ -238,7 +246,8 @@ fun EditGuardDataScreen(
                 label = { Text("Imię*") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (isNameValid) 16.dp else 4.dp),
+                    .padding(bottom = if (isNameValid) 16.dp else 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_NAME_INPUT),
                 isError = !isNameValid,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Text,
@@ -252,6 +261,7 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_NAME_INPUT_ERROR)
                 )
             }
 
@@ -266,7 +276,8 @@ fun EditGuardDataScreen(
                 label = { Text("Nazwisko*") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (isSurnameValid) 16.dp else 4.dp),
+                    .padding(bottom = if (isSurnameValid) 16.dp else 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_SURNAME_INPUT),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Text,
                     imeAction = ImeAction.Companion.Next
@@ -280,6 +291,7 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_SURNAME_INPUT_ERROR)
                 )
             }
 
@@ -292,7 +304,8 @@ fun EditGuardDataScreen(
                 label = { Text("Email*") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (isEmailValid) 16.dp else 4.dp),
+                    .padding(bottom = if (isEmailValid) 16.dp else 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_EMAIL_INPUT),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Email,
                     imeAction = ImeAction.Companion.Next
@@ -306,6 +319,7 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_EMAIL_INPUT_ERROR)
                 )
             }
 
@@ -320,7 +334,8 @@ fun EditGuardDataScreen(
                 label = { Text("Nr telefonu*") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 4.dp),
+                    .padding(bottom = 4.dp)
+                    .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_PHONE_INPUT),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     keyboardType = KeyboardType.Companion.Phone,
                     imeAction = ImeAction.Companion.Next
@@ -333,13 +348,13 @@ fun EditGuardDataScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 8.dp)
+                        .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_PHONE_INPUT_ERROR)
                 )
             }
 
         }
         Button(
             onClick = {
-
                 isLoginValid = isLoginValid(loginState)
                 isPasswordValid = passwordState.length > 0
                 isNewPasswordValid =
@@ -365,7 +380,8 @@ fun EditGuardDataScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp)
-                .weight(0.1f),
+                .weight(0.1f)
+                .testTag(TestTags.EDIT_GUARD_DATA_SCREEN_SUBMIT),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Zapisz zmiany", color = MaterialTheme.colorScheme.onSecondary)

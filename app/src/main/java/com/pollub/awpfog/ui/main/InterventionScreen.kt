@@ -181,10 +181,13 @@ fun InterventionScreen(
 }
 
 
+//works only on emulator, need to mock SharedPreferences for preview
 @Preview(showBackground = true)
 @Composable
 fun InterventionScreenPreview() {
+    SharedPreferencesManager.init(LocalContext.current)
     AwpfogTheme(dynamicColor = false) {
+        SharedPreferencesManager.init(LocalContext.current)
         Scaffold(
             modifier = Modifier.fillMaxSize(),
         ) { innerPadding ->

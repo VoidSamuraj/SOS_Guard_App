@@ -19,7 +19,6 @@ class AppViewModelTest {
     companion object {
         private val mockWebServer = MockWebServer()
         private lateinit var viewModel: AppViewModel
-
         @BeforeClass
         @JvmStatic
         fun setUpAll() {
@@ -134,7 +133,7 @@ class AppViewModelTest {
         }
         assert(testResult)
         assert(SharedPreferencesManager.getToken() == "customerToken")
-        assert(SharedPreferencesManager.getUserName() == "John Doe")
+        assert(SharedPreferencesManager.getGuardName() == "John Doe")
     }
 
     @Test
@@ -191,7 +190,7 @@ class AppViewModelTest {
         }
         assert(testResult)
         assert(SharedPreferencesManager.getToken() == "customerToken")
-        assert(SharedPreferencesManager.getUserName() == "Andrzej Nowak")
+        assert(SharedPreferencesManager.getGuardName() == "Andrzej Nowak")
     }
 
     @Test
@@ -249,7 +248,7 @@ class AppViewModelTest {
         }
         assert(testResult == true)
         assert(SharedPreferencesManager.getToken() == "customerToken")
-        assert(SharedPreferencesManager.getUserName() == "Andrzej Nowak")
+        assert(SharedPreferencesManager.getGuardName() == "Andrzej Nowak")
 
         response = MockResponse().setResponseCode(200)
             .setBody("true")
@@ -270,7 +269,7 @@ class AppViewModelTest {
         }
         assert(testResult == true)
         assert(SharedPreferencesManager.getToken() != "customerToken")
-        assert(SharedPreferencesManager.getUserName() != "John Doe")
+        assert(SharedPreferencesManager.getGuardName() != "John Doe")
     }
 
     @Test

@@ -72,8 +72,6 @@ dependencies {
     implementation("com.mapbox.extension:maps-compose:11.8.0-rc.1")
     implementation("com.mapbox.navigationcore:android:3.5.0-rc.1")
 
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-
     implementation("androidx.security:security-crypto:1.0.0")
     implementation("com.auth0:java-jwt:4.4.0")
 

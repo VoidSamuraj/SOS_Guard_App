@@ -23,7 +23,7 @@ import com.pollub.awpfog.service.LocationService
  * It interacts with the UserRepository to perform actions like login, registration, guard information editing,
  * password reminders, and token validation. SharedPreferencesManager is used to save or clear user data.
  */
-class AppViewModel : ViewModel() {
+class AppViewModel() : ViewModel() {
 
     val currentLocation = mutableStateOf<Location?>(null)
     var isInterventionVisible = mutableStateOf(false)

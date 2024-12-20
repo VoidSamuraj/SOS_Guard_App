@@ -29,12 +29,14 @@ import com.pollub.awpfog.utils.isLoginValid
 import com.pollub.awpfog.utils.isPasswordValid
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pollub.awpfog.R
+import com.pollub.awpfog.utils.TestTags
 import com.pollub.awpfog.viewmodel.RegisterScreenViewModel
 
 /**
@@ -97,7 +99,8 @@ fun RegistrationScreen(
             label = { Text("Login*") },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isLoginValid) 16.dp else 4.dp),
+                .padding(bottom = if (isLoginValid) 16.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_LOGIN_INPUT),
             isError = !isLoginValid,
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Text,
@@ -110,7 +113,9 @@ fun RegistrationScreen(
                 text = "Login jest wymagany i powinien zawierać od 3 do 20 znaków",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_LOGIN_INPUT_ERROR)
             )
         }
         OutlinedTextField(
@@ -124,7 +129,8 @@ fun RegistrationScreen(
             visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (isPasswordValid) 16.dp else 4.dp),
+                .padding(bottom = if (isPasswordValid) 16.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PASSWORD_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Next
@@ -146,7 +152,9 @@ fun RegistrationScreen(
                 text = "Hasło powinno mieć minimum 8 znaków, zawierać małą i dużą literę, cyfrę i znak specjalny.",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_PASSWORD_INPUT_ERROR)
             )
         }
         OutlinedTextField(
@@ -159,7 +167,8 @@ fun RegistrationScreen(
             visualTransformation = if (repeatPasswordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = if (arePasswordsSame) 32.dp else 4.dp),
+                .padding(bottom = if (arePasswordsSame) 32.dp else 4.dp)
+                .testTag(TestTags.REGISTER_SCREEN_PASSWORD_REPEAT_INPUT),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
@@ -183,12 +192,13 @@ fun RegistrationScreen(
                 text = "Hasła powinny być takie same.",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier
+                    .padding(bottom = 24.dp)
+                    .testTag(TestTags.REGISTER_SCREEN_PASSWORD_REPEAT_INPUT_ERROR)
             )
         }
         Button(
             onClick = {
-
                 isLoginValid = isLoginValid(loginState)
                 isPasswordValid = isPasswordValid(passwordState)
                 arePasswordsSame = passwordState == confirmPasswordState
@@ -201,7 +211,8 @@ fun RegistrationScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .testTag(TestTags.REGISTER_SCREEN_CREATE_ACCOUNT_BUTTON),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
         ) {
             Text(text = "Załóż konto", color = MaterialTheme.colorScheme.onSecondary)
@@ -219,7 +230,9 @@ fun RegistrationScreen(
                 registerScreenViewModel.clearAllFields()
                 navToLogin()
             },
-            modifier = Modifier.padding(bottom = 100.dp)
+            modifier = Modifier
+                .padding(bottom = 100.dp)
+                .testTag(TestTags.REGISTER_SCREEN_LOGIN_BUTTON)
         ) {
             Text(text = "Zaloguj się", color = MaterialTheme.colorScheme.onTertiaryContainer)
         }

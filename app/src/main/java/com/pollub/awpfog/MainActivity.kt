@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         SharedPreferencesManager.init(this)
-        viewModel = ViewModelProvider(this).get(AppViewModel::class.java)
+        viewModel = ViewModelProvider(this)[AppViewModel::class.java]
         NetworkClient.WebSocketManager.setViewModel(viewModel)
 
         handler.post(refreshTask)

@@ -17,11 +17,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pollub.awpfog.ui.theme.AwpfogTheme
+import com.pollub.awpfog.utils.TestTags
 
 /**
  * Composable function that renders different sets of buttons depending on whether the intervention has started.
@@ -63,7 +65,8 @@ fun InterventionButtons(
                 modifier = Modifier
                     .height(80.dp)
                     .weight(1f)
-                    .padding(end = 8.dp),
+                    .padding(end = 8.dp)
+                    .testTag(TestTags.INTERVENTION_BUTTONS_CONFIRM_ARRIVAL_BUTTON),
                 enabled = !isSystemDisconnected.value
             ) {
                 Text(
@@ -84,7 +87,8 @@ fun InterventionButtons(
                 modifier = Modifier
                     .height(80.dp)
                     .weight(1f)
-                    .padding(start = 8.dp),
+                    .padding(start = 8.dp)
+                    .testTag(TestTags.INTERVENTION_BUTTONS_REJECT_BUTTON),
                 enabled = !isSystemDisconnected.value
             ) {
                 Text(
@@ -113,7 +117,8 @@ fun InterventionButtons(
                 modifier = Modifier
                     .height(100.dp)
                     .padding(bottom = 16.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .testTag(TestTags.INTERVENTION_BUTTONS_FINISH_BUTTON),
                 enabled = !isSystemDisconnected.value
 
             ) {
@@ -142,6 +147,7 @@ fun InterventionButtons(
                     .height(100.dp)
                     .padding(bottom = 16.dp)
                     .fillMaxWidth()
+                    .testTag(TestTags.INTERVENTION_BUTTONS_REINFORCEMENTS_BUTTON)
             ) {
                 if (supportAlongTheWay.value)
                     Text(

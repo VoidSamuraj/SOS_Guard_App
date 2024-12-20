@@ -9,7 +9,7 @@ import com.pollub.awpfog.data.models.Guard
 /**
  * Singleton object to manage user session data using SharedPreferences.
  */
-object SharedPreferencesManager {
+object SharedPreferencesManager: SharedPreferencesManagerInterface {
     private const val PREF_NAME = "app_session"
     private const val LOGIN_ID = "login"
     private const val KEY_ID = "id"
@@ -46,7 +46,7 @@ object SharedPreferencesManager {
      *
      * @param status The [Guard.GuardStatus] representing current status.
      */
-    fun saveStatus(status: Guard.GuardStatus){
+    override fun saveStatus(status: Guard.GuardStatus){
         sharedPreferences.edit()
             .putInt(KEY_STATUS, status.status)
             .apply()
@@ -57,7 +57,7 @@ object SharedPreferencesManager {
      *
      * @param token The Customer access token.
      */
-    fun saveToken(token: String){
+    override fun saveToken(token: String){
         sharedPreferences.edit()
             .putString(KEY_TOKEN, token)
             .apply()
@@ -68,7 +68,7 @@ object SharedPreferencesManager {
      *
      * @param token The token to be saved
      */
-    fun saveSecureToken(token: String) {
+    override  fun saveSecureToken(token: String) {
         encryptedPreferences.edit()
             .putString(SECURED_JWT, token)
             .apply()
@@ -79,14 +79,14 @@ object SharedPreferencesManager {
      *
      * @return The saved token
      */
-    fun getSecureToken(): String? {
+    override fun getSecureToken(): String? {
         return encryptedPreferences.getString(SECURED_JWT, null)
     }
 
     /**
      * Remove long term token from EncryptedSharedPreferences
      */
-    fun removeSecureToken() {
+    override fun removeSecureToken() {
         encryptedPreferences.edit().clear().apply()
     }
 
@@ -96,7 +96,7 @@ object SharedPreferencesManager {
      *
      * @return status code of [Guard.GuardStatus] representing current status, default GuardStatus.UNAVAILABLE.
      */
-    fun getStatus():Int{
+    override fun getStatus():Int{
         return sharedPreferences.getInt(KEY_STATUS, Guard.GuardStatus.UNAVAILABLE.status)
     }
 
@@ -105,7 +105,7 @@ object SharedPreferencesManager {
      *
      * @param reportId The Id of Report.
      */
-    fun saveReportId(reportId: Int){
+    override fun saveReportId(reportId: Int){
         sharedPreferences.edit()
             .putInt(KEY_LAST_REPORT_ID, reportId)
             .apply()
@@ -116,7 +116,7 @@ object SharedPreferencesManager {
      *
      * @return Id of Report.
      */
-    fun getReportId():Int{
+    override fun getReportId():Int{
         return sharedPreferences.getInt(KEY_LAST_REPORT_ID, -1)
     }
 
@@ -126,7 +126,7 @@ object SharedPreferencesManager {
      *
      * @param guard The Guard object containing user details to save.
      */
-    fun saveGuard(guard: Guard) {
+    override fun saveGuard(guard: Guard) {
         sharedPreferences.edit()
             .putString(KEY_ID, guard.id.toString())
             .putString(LOGIN_ID, guard.login.toString())
@@ -143,7 +143,7 @@ object SharedPreferencesManager {
      *
      * @return A Guard object populated with user details from SharedPreferences.
      */
-    fun getGuard(): Guard {
+    override fun getGuard(): Guard {
         return sharedPreferences.let {
             return@let Guard(
                 id = it.getString(KEY_ID, "-1").toString().toInt(),
@@ -166,7 +166,7 @@ object SharedPreferencesManager {
      *
      * @return A String containing the user's full name.
      */
-    fun getGuardName(): String {
+    override fun getGuardName(): String {
         return sharedPreferences.getString(KEY_NAME, "") + " " + sharedPreferences.getString(
             KEY_SURNAME,
             ""
@@ -178,14 +178,14 @@ object SharedPreferencesManager {
      *
      * @return The token string, or null if not present.
      */
-    fun getToken(): String? {
+    override fun getToken(): String? {
         return sharedPreferences.getString(KEY_TOKEN, null)
     }
 
     /**
      * Clears all data from SharedPreferences.
      */
-    fun clear() {
+    override fun clear() {
         sharedPreferences.edit().clear().apply()
     }
 }
