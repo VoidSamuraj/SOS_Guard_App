@@ -91,7 +91,8 @@ object NetworkClient {
     object WebSocketManager {
 
         private lateinit var webSocket: WebSocket
-        private var isConnected = false
+        var isConnected = false
+            private set
         private var closeCode: Int? = null
         private var onConnect: (() -> Unit)? = null
         private var onInterventionCancelled: (() -> Unit)? = null
