@@ -19,6 +19,9 @@
 The **SOS Application** is designed to assist security companies by automating and streamlining processes related to handling emergency requests. It ensures users receive quick and effective help in critical situations. The app works in conjunction with: the <a href="https://github.com/VoidSamuraj/SOS_Server" target="_blank">SOS Server</a> and <a href="https://github.com/VoidSamuraj/SOS_Client_App" target="_blank">SOS Client</a>.
 
 ![guard](https://github.com/user-attachments/assets/15d883a8-3093-49de-b5b4-cecd94102f1f)
+<a href="https://drive.google.com/file/d/1KK_gapHuLEk1Xl45qQ2u7odBc6tHN9-Z/view?usp=drive_link" target="_blank">
+  <img src="https://github.com/user-attachments/assets/32cc6229-5306-42a7-bd9b-eae5ddda5b1f" alt="demonstration" />
+</a>
 
 ## Key Features:
 - **Real-Time Location Updates**: The app continuously tracks the security guard's position and provides updates at short intervals.
